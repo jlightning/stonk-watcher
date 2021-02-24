@@ -1,6 +1,7 @@
 package entities
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 )
@@ -74,9 +75,25 @@ func (lp ListPercentage) GetListFloat() (r []float64) {
 	return
 }
 
+func (m *Percentage) UnmarshalJSON(bytes []byte) error {
+	if string(bytes) == "null" {
+		*m = Percentage(math.NaN())
+	} else {
+		var parseDest struct {
+			Amount float64 `json:"amount"`
+		}
+		err := json.Unmarshal(bytes, &parseDest)
+		if err != nil {
+			return err
+		}
+		*m = Percentage(parseDest.Amount)
+	}
+	return nil
+}
+
 func (m Percentage) MarshalJSON() ([]byte, error) {
 	if m.IsNaN() {
 		return []byte("null"), nil
 	}
-	return []byte(fmt.Sprintf("%.2f", m)), nil
+	return []byte(fmt.Sprintf(`{"amount": %.2f, "percent": "%.2f%%"}`, m, m*100)), nil
 }

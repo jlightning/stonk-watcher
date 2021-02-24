@@ -10,6 +10,10 @@ func WatchListHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, []string{
 		"MSFT",
 		"ADBE",
+		"AMZN",
+		"GOOG",
+		"TSLA",
 		"XOM",
+		"PFE",
 	})
 }

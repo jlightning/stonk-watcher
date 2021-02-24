@@ -1,57 +1,62 @@
 package entities
 
 type StockInfoDTO struct {
-	Ticker                    string
-	FinvizStockInfoDTO        *FinvizStockInfoDTO
-	MarketWatchInfoDTO        *MarketWatchInfoDTO
-	MorningStarPerformanceDTO *MorningStarPerformanceDTO
+	Ticker                    string                     `json:"ticker"`
+	FinvizStockInfoDTO        *FinvizStockInfoDTO        `json:"finviz_info"`
+	MarketWatchInfoDTO        *MarketWatchInfoDTO        `json:"marketwatch_info"`
+	MorningStarPerformanceDTO *MorningStarPerformanceDTO `json:"morningstar_info"`
 }
 
 type FinvizStockInfoDTO struct {
-	CompanyName   string
-	Index         string
-	MarketCap     Money
-	Income        Money
-	PE            Percentage
-	DividendYield Percentage
-	DebtOnEquity  Percentage
-	GrossMargin   Percentage
-	TargetPrice   Money
-	Price         Money
-	ShortRatio    Percentage
+	CompanyName   string     `json:"company_name"`
+	Index         string     `json:"index"`
+	MarketCap     Money      `json:"market_cap"`
+	Income        Money      `json:"income"`
+	PE            Percentage `json:"pe"`
+	DividendYield Percentage `json:"dividend_yield"`
+	DebtOnEquity  Percentage `json:"debt_on_equity"`
+	GrossMargin   Percentage `json:"gross_margin"`
+	TargetPrice   Money      `json:"target_price"`
+	Price         Money      `json:"price"`
+	ShortRatio    Percentage `json:"short_ratio"`
+	RSI           Percentage `json:"rsi"`
 }
 
 type MarketWatchInfoDTO struct {
-	Years                    []int
-	Sales                    ListMoney
-	SalesGrowth              ListPercentage
-	SalesGrowth5Years        Percentage
-	SalesGrowth3Years        Percentage
-	GrossIncome              ListMoney
-	GrossIncomeMargin        ListPercentage
-	PretaxIncome             ListMoney
-	NetIncome                ListMoney
-	EPS                      ListMoney
-	EPSGrowth                ListPercentage
-	EPSGrowth5Years          Percentage
-	EPSGrowth3Years          Percentage
-	TotalAssets              ListMoney
-	TotalAssetsGrowth        ListPercentage
-	ShortTermDebt            ListMoney
-	LongTermDebt             ListMoney
-	TotalLiabilities         ListMoney
-	Equity                   ListMoney
-	EquiryGrowth5Years       Percentage
-	EquiryGrowth3Years       Percentage
-	FreeCashFlow             ListMoney
-	FreeCashFlowGrowth       ListPercentage
-	FreeCashFlowGrowth5Years Percentage
-	FreeCashFlowGrowth3Years Percentage
+	Years                      []int          `json:"years"`
+	Sales                      ListMoney      `json:"sales"`
+	SalesGrowth                ListPercentage `json:"sales_growth"`
+	SalesGrowth5Years          Percentage     `json:"sales_growth_5_years"`
+	SalesGrowth3Years          Percentage     `json:"sales_growth_3_years"`
+	SalesGrowthLastYear        Percentage     `json:"sales_growth_last_year"`
+	GrossIncome                ListMoney      `json:"gross_income"`
+	GrossIncomeMargin          ListPercentage `json:"gross_income_margin"`
+	PretaxIncome               ListMoney      `json:"pretax_income"`
+	NetIncome                  ListMoney      `json:"net_income"`
+	EPS                        ListMoney      `json:"eps"`
+	EPSGrowth                  ListPercentage `json:"eps_growth"`
+	EPSGrowth5Years            Percentage     `json:"eps_growth_5_years"`
+	EPSGrowth3Years            Percentage     `json:"eps_growth_3_years"`
+	EPSGrowthLastYear          Percentage     `json:"eps_growth_last_year"`
+	TotalAssets                ListMoney      `json:"total_assets"`
+	TotalAssetsGrowth          ListPercentage `json:"total_assets_growth"`
+	ShortTermDebt              ListMoney      `json:"short_term_debt"`
+	LongTermDebt               ListMoney      `json:"long_term_debt"`
+	TotalLiabilities           ListMoney      `json:"total_liabilities"`
+	Equity                     ListMoney      `json:"equity"`
+	EquityGrowth5Years         Percentage     `json:"equity_growth_5_years"`
+	EquityGrowth3Years         Percentage     `json:"equity_growth_3_years"`
+	EquityGrowthLastYear       Percentage     `json:"equity_growth_last_year"`
+	FreeCashFlow               ListMoney      `json:"free_cash_flow"`
+	FreeCashFlowGrowth         ListPercentage `json:"free_cash_flow_growth"`
+	FreeCashFlowGrowth5Years   Percentage     `json:"free_cash_flow_growth_5_years"`
+	FreeCashFlowGrowth3Years   Percentage     `json:"free_cash_flow_growth_3_years"`
+	FreeCashFlowGrowthLastYear Percentage     `json:"free_cash_flow_growth_last_year"`
 }
 
 type MorningStarPerformanceDTO struct {
-	ROI10Years   Percentage
-	ROI5Years    Percentage
-	ROILastYears Percentage
-	ROITTM       Percentage
+	ROI10Years   Percentage `json:"roi_10_years"`
+	ROI5Years    Percentage `json:"roi_5_years"`
+	ROILastYears Percentage `json:"roi_last_year"`
+	ROITTM       Percentage `json:"roittm"`
 }

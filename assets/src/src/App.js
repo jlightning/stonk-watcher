@@ -1,0 +1,180 @@
+import './App.css';
+import {Col, Container, Row, Table} from "react-bootstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import {useEffect, useState} from "react";
+import {get} from 'lodash';
+
+const SERVER_URL = 'http://localhost:8080/'
+
+function App() {
+  const [tickers, setTickers] = useState([]);
+  const [details, setDetails] = useState({})
+
+  useEffect(() => {
+    (async () => {
+      const result = await fetch(`${SERVER_URL}watchlist`).then(r => r.json());
+      setTickers(result);
+    })()
+  }, [])
+
+  useEffect(() => {
+    tickers.forEach(async t => {
+      const res = await fetch(`${SERVER_URL}stock?ticker=${t}`).then(r => r.json());
+      setDetails(prevDate => ({...prevDate, [t]: res}));
+    })
+  }, [tickers])
+
+  return (
+    <div className="App">
+      <Table striped bordered hover className={'stock-table'}>
+        <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Company Name</th>
+          <th>RSI</th>
+          <th>ROIC (10 5 1 TTM)</th>
+          <th>Sales Growth (5 3 1)</th>
+          <th>EPS Growth (5 3 1)</th>
+          <th>Equity Growth (5 3 1)</th>
+          <th>Cash Flow Growth (5 3 1)</th>
+          <th>Price</th>
+          <th>Current P/E</th>
+          <th>Target Price</th>
+        </tr>
+        </thead>
+        <tbody>
+        {
+          tickers.map(t => {
+            let roiGrowths = [];
+            let saleGrowths = [];
+            let epsGrowths = [];
+            let equityGrowths = [];
+            let cashFlowGrowths = [];
+            const detail = get(details, `['${t}']`)
+            if (detail) {
+              roiGrowths = [
+                get(detail, 'morningstar_info.roi_10_years', '-'),
+                get(detail, 'morningstar_info.roi_5_years', '-'),
+                get(detail, 'morningstar_info.roi_last_year', '-'),
+                get(detail, 'morningstar_info.roittm', '-'),
+              ];
+              saleGrowths = [
+                get(detail, `marketwatch_info.sales_growth_5_years`, '-'),
+                get(detail, `marketwatch_info.sales_growth_3_years`, '-'),
+                get(detail, `marketwatch_info.sales_growth_last_year`, '-'),
+              ];
+              epsGrowths = [
+                get(detail, `marketwatch_info.eps_growth_5_years`, '-'),
+                get(detail, `marketwatch_info.eps_growth_3_years`, '-'),
+                get(detail, `marketwatch_info.eps_growth_last_year`, '-'),
+              ];
+              equityGrowths = [
+                get(detail, `marketwatch_info.equity_growth_5_years`, '-'),
+                get(detail, `marketwatch_info.equity_growth_3_years`, '-'),
+                get(detail, `marketwatch_info.equity_growth_last_year`, '-'),
+              ]
+              cashFlowGrowths = [
+                get(detail, `marketwatch_info.free_cash_flow_growth_5_years`, '-'),
+                get(detail, `marketwatch_info.free_cash_flow_growth_3_years`, '-'),
+                get(detail, `marketwatch_info.free_cash_flow_growth_last_year`, '-'),
+              ]
+            }
+            return (
+              <tr>
+                <td>{t}</td>
+                <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
+                <td>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</td>
+                <td>
+                  <Container>
+                    <Row>
+                      {roiGrowths.map(r => {
+                        let className = 'bg-success';
+                        if (get(r, 'amount') < 0.1) {
+                          className = 'bg-warning';
+                        }
+                        if (get(r, 'amount') <= 0) {
+                          className = 'bg-danger';
+                        }
+                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
+                      })}
+                    </Row>
+                  </Container>
+                </td>
+                <td>
+                  <Container>
+                    <Row>
+                      {saleGrowths.map(r => {
+                        let className = 'bg-success';
+                        if (get(r, 'amount') < 0.1) {
+                          className = 'bg-warning';
+                        }
+                        if (get(r, 'amount') <= 0) {
+                          className = 'bg-danger';
+                        }
+                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
+                      })}
+                    </Row>
+                  </Container>
+                </td>
+                <td>
+                  <Container>
+                    <Row>
+                      {epsGrowths.map(r => {
+                        let className = 'bg-success';
+                        if (get(r, 'amount') < 0.1) {
+                          className = 'bg-warning';
+                        }
+                        if (get(r, 'amount') <= 0) {
+                          className = 'bg-danger';
+                        }
+                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
+                      })}
+                    </Row>
+                  </Container>
+                </td>
+                <td>
+                  <Container>
+                    <Row>
+                      {equityGrowths.map(r => {
+                        let className = 'bg-success';
+                        if (get(r, 'amount') < 0.1) {
+                          className = 'bg-warning';
+                        }
+                        if (get(r, 'amount') <= 0) {
+                          className = 'bg-danger';
+                        }
+                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
+                      })}
+                    </Row>
+                  </Container>
+                </td>
+                <td>
+                  <Container>
+                    <Row>
+                      {cashFlowGrowths.map(r => {
+                        let className = 'bg-success';
+                        if (get(r, 'amount') < 0.1) {
+                          className = 'bg-warning';
+                        }
+                        if (get(r, 'amount') <= 0) {
+                          className = 'bg-danger';
+                        }
+                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
+                      })}
+                    </Row>
+                  </Container>
+                </td>
+                <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
+                <td>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</td>
+                <td>{get(details, `['${t}'].finviz_info.target_price`, '-')}</td>
+              </tr>
+            )
+          })
+        }
+        </tbody>
+      </Table>
+    </div>
+  );
+}
+
+export default App;

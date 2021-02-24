@@ -92,12 +92,16 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 	}{
 		{dest: &stockInfo.SalesGrowth5Years, source: stockInfo.Sales, duration: 5},
 		{dest: &stockInfo.SalesGrowth3Years, source: stockInfo.Sales, duration: 3},
+		{dest: &stockInfo.SalesGrowthLastYear, source: stockInfo.Sales, duration: 2},
 		{dest: &stockInfo.EPSGrowth5Years, source: stockInfo.EPS, duration: 5},
 		{dest: &stockInfo.EPSGrowth3Years, source: stockInfo.EPS, duration: 3},
-		{dest: &stockInfo.EquiryGrowth5Years, source: stockInfo.Equity, duration: 5},
-		{dest: &stockInfo.EquiryGrowth3Years, source: stockInfo.Equity, duration: 3},
+		{dest: &stockInfo.EPSGrowthLastYear, source: stockInfo.EPS, duration: 2},
+		{dest: &stockInfo.EquityGrowth5Years, source: stockInfo.Equity, duration: 5},
+		{dest: &stockInfo.EquityGrowth3Years, source: stockInfo.Equity, duration: 3},
+		{dest: &stockInfo.EquityGrowthLastYear, source: stockInfo.Equity, duration: 2},
 		{dest: &stockInfo.FreeCashFlowGrowth5Years, source: stockInfo.FreeCashFlow, duration: 5},
 		{dest: &stockInfo.FreeCashFlowGrowth3Years, source: stockInfo.FreeCashFlow, duration: 3},
+		{dest: &stockInfo.FreeCashFlowGrowthLastYear, source: stockInfo.FreeCashFlow, duration: 2},
 	}
 
 	for _, pair := range compoundInterestPairs2 {
