@@ -18,6 +18,7 @@ func main() {
 	router.GET("/stock", handlers.StockHandler)
 	router.DELETE("/stock", handlers.TruncateStockInfo)
 	router.GET("/stock/price", handlers.StockPriceHandler)
+	router.GET("/watchlist", handlers.WatchListHandler)
 	err = router.Run()
 	if err != nil {
 		log.Fatal(err)
