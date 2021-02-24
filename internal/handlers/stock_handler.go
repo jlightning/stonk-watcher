@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"stonk-watcher/internal/repositories"
 	"stonk-watcher/internal/services"
 	"strings"
 
@@ -17,7 +18,7 @@ func StockHandler(c *gin.Context) {
 
 	resp, err := services.GetStockInformation(strings.ToUpper(ticker))
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
@@ -32,8 +33,17 @@ func StockPriceHandler(c *gin.Context) {
 
 	resp, err := services.GetDataFromFinviz(strings.ToUpper(ticker))
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+func TruncateStockInfo(c *gin.Context) {
+	err := repositories.TruncateStockInfo()
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, "OK")
 }

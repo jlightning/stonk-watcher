@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/gocolly/colly"
 )
 
@@ -92,7 +94,7 @@ func getMorningstarPerformance(stockMSID string, apiKey string) (*morningStarPer
 	c.OnResponse(func(response *colly.Response) {
 		err := json.Unmarshal(response.Body, &responseDTO)
 		if err != nil {
-			fmt.Println("Error while decoding Morningstar response: ", err.Error())
+			logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 		}
 	})
 

@@ -3,6 +3,9 @@ package repositories
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
+	"stonk-watcher/internal/config"
 	"stonk-watcher/internal/entities"
 	"strings"
 	"time"
@@ -36,7 +39,7 @@ func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
 	key := fmt.Sprintf("stock-info-%s.json", ticker)
 	bytes, err := json.Marshal(CommonRepositoryRecord{
 		ID:        uuid.NewString(),
-		Version:   "0.0.1",
+		Version:   config.GetVersion(),
 		Content:   dto,
 		CreatedAt: time.Now(),
 	})
@@ -45,4 +48,19 @@ func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
 	}
 
 	return writeFile(dataPath+key, bytes, 0600)
+}
+
+func TruncateStockInfo() error {
+	files, err := filepath.Glob(dataPath + "stock-info-*.json")
+	if err != nil {
+		return err
+	}
+
+	for _, f := range files {
+		err := os.Remove(f)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package services
 import (
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/repositories"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -32,6 +33,7 @@ func GetStockInformation(ticker string) (*entities.StockInfoDTO, error) {
 	}
 
 	dto := &entities.StockInfoDTO{
+		Ticker:                    strings.ToUpper(ticker),
 		FinvizStockInfoDTO:        finvizInfo,
 		MarketWatchInfoDTO:        marketWatchInfo,
 		MorningStarPerformanceDTO: morningStarInfo,

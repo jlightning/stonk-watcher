@@ -1,6 +1,7 @@
 package entities
 
 type StockInfoDTO struct {
+	Ticker                    string
 	FinvizStockInfoDTO        *FinvizStockInfoDTO
 	MarketWatchInfoDTO        *MarketWatchInfoDTO
 	MorningStarPerformanceDTO *MorningStarPerformanceDTO

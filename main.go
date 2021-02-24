@@ -16,6 +16,7 @@ func main() {
 
 	router := gin.Default()
 	router.GET("/stock", handlers.StockHandler)
+	router.DELETE("/stock", handlers.TruncateStockInfo)
 	router.GET("/stock/price", handlers.StockPriceHandler)
 	err = router.Run()
 	if err != nil {

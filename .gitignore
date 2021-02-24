@@ -30,6 +30,7 @@ Temporary Items
 .idea
 *.tmp.*
 .~lock.*
+data
 
 # IDE files
 .vscode
