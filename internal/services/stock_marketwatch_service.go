@@ -12,16 +12,16 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func GetDataFromMarketWatch(ticker string) (*MarketWatchInfoDTO, error) {
+func GetDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDTO, error) {
 	return getFinancialDataFromMarketWatch(ticker)
 }
 
-func getFinancialDataFromMarketWatch(ticker string) (*MarketWatchInfoDTO, error) {
+func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDTO, error) {
 	financialUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials", strings.ToLower(ticker))
 	cashFlowUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/cash-flow", strings.ToLower(ticker))
 	balanceSheetUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/balance-sheet", strings.ToLower(ticker))
 
-	var stockInfo MarketWatchInfoDTO
+	var stockInfo entities.MarketWatchInfoDTO
 
 	incomeStmData, years, err := getMarketwatchTableData(financialUrl)
 	if err != nil {

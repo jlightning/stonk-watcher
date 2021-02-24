@@ -1,6 +1,21 @@
 package services
 
-func GetStockInformation(ticker string) (*StockInfoDTO, error) {
+import (
+	"stonk-watcher/internal/entities"
+	"stonk-watcher/internal/repositories"
+
+	"github.com/sirupsen/logrus"
+)
+
+func GetStockInformation(ticker string) (*entities.StockInfoDTO, error) {
+	stockInfo, err := repositories.GetStockInfo(ticker)
+	if err != nil {
+		logrus.WithError(err).Warnf("error while getting data from repository for ticker: %s", ticker)
+	}
+	if stockInfo != nil {
+		return stockInfo, nil
+	}
+
 	finvizInfo, err := GetDataFromFinviz(ticker)
 	if err != nil {
 		return nil, err
@@ -16,9 +31,15 @@ func GetStockInformation(ticker string) (*StockInfoDTO, error) {
 		return nil, err
 	}
 
-	return &StockInfoDTO{
+	dto := &entities.StockInfoDTO{
 		FinvizStockInfoDTO:        finvizInfo,
 		MarketWatchInfoDTO:        marketWatchInfo,
 		MorningStarPerformanceDTO: morningStarInfo,
-	}, nil
+	}
+
+	err = repositories.PersistStockInfo(ticker, dto)
+	if err != nil {
+		logrus.WithError(err).Warnf("error while persisting data for ticker: %s", ticker)
+	}
+	return dto, nil
 }

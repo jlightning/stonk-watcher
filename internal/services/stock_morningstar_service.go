@@ -12,7 +12,20 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func GetDataFromMorningstar(ticker string) (*MorningStarPerformanceDTO, error) {
+type morningStarPerformanceResponseDTO struct {
+	Reported struct {
+		Columns   []string `json:"columnDefs"`
+		Collapsed struct {
+			Rows []struct {
+				Label      string   `json:"label"`
+				Datum      []string `json:"datum"`
+				Percentage bool     `json:"percentage"`
+			} `json:"rows"`
+		} `json:"Collapsed"`
+	} `json:"reported"`
+}
+
+func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO, error) {
 	stockMSID, err := getMorningstarStockID(ticker, nil)
 	if err != nil {
 		return nil, err
@@ -57,7 +70,7 @@ func GetDataFromMorningstar(ticker string) (*MorningStarPerformanceDTO, error) {
 	roi10 /= 10
 	roi5 /= 10
 
-	response := MorningStarPerformanceDTO{
+	response := entities.MorningStarPerformanceDTO{
 		ROI10Years:   entities.Percentage(roi10 / 100),
 		ROI5Years:    entities.Percentage(roi5 / 100),
 		ROILastYears: entities.Percentage(roi1 / 100),
@@ -67,11 +80,11 @@ func GetDataFromMorningstar(ticker string) (*MorningStarPerformanceDTO, error) {
 	return &response, nil
 }
 
-func getMorningstarPerformance(stockMSID string, apiKey string) (*MorningStarPerformanceResponseDTO, error) {
+func getMorningstarPerformance(stockMSID string, apiKey string) (*morningStarPerformanceResponseDTO, error) {
 	c := colly.NewCollector()
 	apiUrl := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/operatingPerformance/v2/%s", stockMSID)
 
-	var responseDTO MorningStarPerformanceResponseDTO
+	var responseDTO morningStarPerformanceResponseDTO
 
 	c.OnRequest(func(request *colly.Request) {
 		request.Headers.Add("ApiKey", apiKey)

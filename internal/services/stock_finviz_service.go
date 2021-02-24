@@ -9,12 +9,12 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func GetDataFromFinviz(ticker string) (*FinvizStockInfoDTO, error) {
+func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 	url := fmt.Sprintf("https://finviz.com/quote.ashx?t=%s", ticker)
 
 	c := colly.NewCollector()
 
-	var stockInfo FinvizStockInfoDTO
+	var stockInfo entities.FinvizStockInfoDTO
 
 	data := map[string]string{}
 	// getting stock table
