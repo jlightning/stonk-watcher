@@ -1,0 +1,172 @@
+package services
+
+import (
+	"fmt"
+	"regexp"
+	"stonk-watcher/internal/util"
+	"strconv"
+	"strings"
+
+	"github.com/gocolly/colly"
+)
+
+func GetDataFromMarketWatch(ticker string) error {
+	return getFinancialDataFromMarketWatch(ticker)
+}
+
+func getFinancialDataFromMarketWatch(ticker string) error {
+	financialUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials", strings.ToLower(ticker))
+	cashFlowUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/cash-flow", strings.ToLower(ticker))
+	balanceSheetUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/balance-sheet", strings.ToLower(ticker))
+
+	var stockInfo MarketWatchInfoDTO
+
+	incomeStmData, years, err := getMarketwatchTableData(financialUrl)
+	if err != nil {
+		return err
+	}
+
+	balanceSheetData, _, err := getMarketwatchTableData(balanceSheetUrl)
+	if err != nil {
+		return err
+	}
+
+	cashFlowData, _, err := getMarketwatchTableData(cashFlowUrl)
+	if err != nil {
+		return err
+	}
+
+	stockInfo.Years = years
+
+	floatPairs := []struct {
+		dest   *[]*float64
+		title  string
+		source map[string][]string
+		parser func([]string) ([]*float64, error)
+	}{
+		{dest: &stockInfo.Sales, title: "Sales/Revenue", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.SalesGrowth, title: "Sales Growth", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.GrossIncome, title: "Gross Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.PretaxIncome, title: "Pretax Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.NetIncome, title: "Net Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.EPS, title: "EPS (Diluted)", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.EPSGrowth, title: "EPS (Diluted) Growth", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.TotalAssets, title: "Total Assets", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.TotalAssetsGrowth, title: "Total Assets Growth", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.ShortTermDebt, title: "Short Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.LongTermDebt, title: "Long-Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.TotalLiabilities, title: "Total Liabilities", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.Equity, title: "Total Shareholders' Equity", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.FreeCashFlow, title: "Free Cash Flow", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.FreeCashFlowGrowth, title: "Free Cash Flow Growth", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+	}
+
+	for _, pair := range floatPairs {
+		value, err := pair.parser(pair.source[pair.title])
+		if err != nil {
+			return err
+		}
+
+		*pair.dest = value
+	}
+
+	for i, sale := range stockInfo.Sales {
+		if len(stockInfo.GrossIncome) > i {
+			grossIncome := stockInfo.GrossIncome[i]
+
+			if sale != nil && grossIncome != nil {
+				amount := (*grossIncome) / (*sale)
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, &amount)
+			} else {
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, nil)
+			}
+		}
+	}
+
+	compoundInterestPairs2 := []struct {
+		dest     **float64
+		source   []*float64
+		duration int
+	}{
+		{dest: &stockInfo.SalesGrowth5Years, source: stockInfo.Sales, duration: 5},
+		{dest: &stockInfo.SalesGrowth3Years, source: stockInfo.Sales, duration: 3},
+		{dest: &stockInfo.EPSGrowth5Years, source: stockInfo.EPS, duration: 5},
+		{dest: &stockInfo.EPSGrowth3Years, source: stockInfo.EPS, duration: 3},
+		{dest: &stockInfo.EquiryGrowth5Years, source: stockInfo.Equity, duration: 5},
+		{dest: &stockInfo.EquiryGrowth3Years, source: stockInfo.Equity, duration: 3},
+		{dest: &stockInfo.FreeCashFlowGrowth5Years, source: stockInfo.FreeCashFlow, duration: 5},
+		{dest: &stockInfo.FreeCashFlowGrowth3Years, source: stockInfo.FreeCashFlow, duration: 3},
+	}
+
+	for _, pair := range compoundInterestPairs2 {
+		source := pair.source
+
+		if len(source)-pair.duration < 0 {
+			continue
+		}
+
+		if source[len(source)-pair.duration] != nil && source[len(source)-1] != nil {
+			amount := util.CalculateAnnualCompoundInterest(*source[len(source)-pair.duration], *source[len(source)-1], pair.duration)
+			*pair.dest = &amount
+		}
+	}
+
+	fmt.Println(util.MustJSONStringify(stockInfo, true))
+
+	return nil
+}
+
+func getMarketwatchTableData(url string) (map[string][]string, []int, error) {
+	c := colly.NewCollector()
+
+	data := map[string][]string{}
+	var years []int
+
+	c.OnHTML("table", func(e *colly.HTMLElement) {
+		found := false
+		e.ForEach("th", func(i int, th *colly.HTMLElement) {
+			if i == 0 && parseMarketWatchRowTitle(th) == "Item" {
+				found = true
+			}
+		})
+
+		if found {
+			e.ForEach("th", func(i int, th *colly.HTMLElement) {
+				if i > 0 {
+					parsed := parseMarketWatchRowTitle(th)
+					if regexp.MustCompile("^[0-9]+$").Match([]byte(parsed)) {
+						year, _ := strconv.Atoi(parsed)
+						years = append(years, year)
+					}
+				}
+			})
+
+			e.ForEach("tr", func(i int, tr *colly.HTMLElement) {
+				rowKey := ""
+				tr.ForEach("td", func(i int, td *colly.HTMLElement) {
+					if i == 0 {
+						rowKey = parseMarketWatchRowTitle(td)
+					} else if len(strings.TrimSpace(td.Text)) > 0 {
+						data[rowKey] = append(data[rowKey], td.Text)
+					}
+				})
+			})
+		}
+	})
+
+	err := c.Visit(url)
+	if err != nil {
+		return nil, nil, err
+	}
+	return data, years, nil
+}
+
+func parseMarketWatchRowTitle(e *colly.HTMLElement) string {
+	text := ""
+	e.ForEach("div", func(i int, element *colly.HTMLElement) {
+		if i == 0 {
+			text = element.Text
+		}
+	})
+	return text
+}
