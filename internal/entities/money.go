@@ -1,0 +1,82 @@
+package entities
+
+import (
+	"fmt"
+	"math"
+)
+
+type FloatSetter interface {
+	Set(float64)
+}
+
+type ListFloatSetter interface {
+	Set([]float64)
+}
+
+type ListFloatGetter interface {
+	GetListFloat() []float64
+}
+
+type Money float64
+type ListMoney []Money
+
+func (m *Money) Set(i float64) {
+	*m = Money(i)
+}
+
+func (m Money) IsNaN() bool {
+	return math.IsNaN(float64(m))
+}
+
+func (m Money) MarshalJSON() ([]byte, error) {
+	if m.IsNaN() {
+		return []byte("null"), nil
+	}
+	return []byte(fmt.Sprintf("%.2f", m)), nil
+}
+
+func (lm *ListMoney) Set(list []float64) {
+	*lm = make(ListMoney, 0, len(list))
+	for _, i := range list {
+		*lm = append(*lm, Money(i))
+	}
+}
+
+func (lm ListMoney) GetListFloat() (r []float64) {
+	for _, i := range lm {
+		r = append(r, float64(i))
+	}
+	return
+}
+
+type Percentage float64
+type ListPercentage []Percentage
+
+func (p *Percentage) Set(i float64) {
+	*p = Percentage(i)
+}
+
+func (p Percentage) IsNaN() bool {
+	return math.IsNaN(float64(p))
+}
+
+func (lp *ListPercentage) Set(list []float64) {
+	*lp = make(ListPercentage, 0, len(list))
+	for _, i := range list {
+		*lp = append(*lp, Percentage(i))
+	}
+}
+
+func (lp ListPercentage) GetListFloat() (r []float64) {
+	for _, i := range lp {
+		r = append(r, float64(i))
+	}
+	return
+}
+
+func (m Percentage) MarshalJSON() ([]byte, error) {
+	if m.IsNaN() {
+		return []byte("null"), nil
+	}
+	return []byte(fmt.Sprintf("%.2f", m)), nil
+}

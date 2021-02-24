@@ -3,22 +3,24 @@ package util
 import (
 	"errors"
 	"fmt"
+	"math"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
-func ParseMultipleFloat(parser func(string) (float64, error)) func([]string) ([]*float64, error) {
-	return func(input []string) (res []*float64, err error) {
+func ParseMultipleFloat(parser func(string) (float64, error)) func([]string) ([]float64, error) {
+	return func(input []string) (res []float64, err error) {
 		for _, i := range input {
 			if i == "-" {
-				res = append(res, nil)
+				res = append(res, math.NaN())
 			} else {
 				amount, err := parser(i)
 				if err != nil {
 					return nil, err
 				}
 
-				res = append(res, &amount)
+				res = append(res, amount)
 			}
 		}
 
@@ -27,7 +29,18 @@ func ParseMultipleFloat(parser func(string) (float64, error)) func([]string) ([]
 }
 
 func ParseMoney(str string) (float64, error) {
+	if len(str) == 0 {
+		return math.NaN(), nil
+	}
+	if str == "-" {
+		return math.NaN(), nil
+	}
+
 	orgStr := str
+
+	if regexp.MustCompile("^\\(.*\\)$").MatchString(str) {
+		str = "-" + str[1:len(str)-1]
+	}
 
 	unit := ""
 	if str[len(str)-1] >= 'A' && str[len(str)-1] <= 'z' {
@@ -55,7 +68,10 @@ func ParseMoney(str string) (float64, error) {
 
 func ParsePercentage(str string) (float64, error) {
 	if !strings.HasSuffix(str, "%") {
-		return 0, errors.New(fmt.Sprintf("invalid percentage: %s", str))
+		return math.NaN(), nil
+	}
+	if str == "-" {
+		return math.NaN(), nil
 	}
 
 	str = str[:len(str)-1]

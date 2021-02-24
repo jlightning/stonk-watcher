@@ -2,7 +2,9 @@ package services
 
 import (
 	"fmt"
+	"math"
 	"regexp"
+	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strconv"
 	"strings"
@@ -10,11 +12,11 @@ import (
 	"github.com/gocolly/colly"
 )
 
-func GetDataFromMarketWatch(ticker string) error {
+func GetDataFromMarketWatch(ticker string) (*MarketWatchInfoDTO, error) {
 	return getFinancialDataFromMarketWatch(ticker)
 }
 
-func getFinancialDataFromMarketWatch(ticker string) error {
+func getFinancialDataFromMarketWatch(ticker string) (*MarketWatchInfoDTO, error) {
 	financialUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials", strings.ToLower(ticker))
 	cashFlowUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/cash-flow", strings.ToLower(ticker))
 	balanceSheetUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/balance-sheet", strings.ToLower(ticker))
@@ -23,26 +25,26 @@ func getFinancialDataFromMarketWatch(ticker string) error {
 
 	incomeStmData, years, err := getMarketwatchTableData(financialUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	balanceSheetData, _, err := getMarketwatchTableData(balanceSheetUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	cashFlowData, _, err := getMarketwatchTableData(cashFlowUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	stockInfo.Years = years
 
 	floatPairs := []struct {
-		dest   *[]*float64
+		dest   entities.ListFloatSetter
 		title  string
 		source map[string][]string
-		parser func([]string) ([]*float64, error)
+		parser func([]string) ([]float64, error)
 	}{
 		{dest: &stockInfo.Sales, title: "Sales/Revenue", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.SalesGrowth, title: "Sales Growth", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
@@ -64,28 +66,28 @@ func getFinancialDataFromMarketWatch(ticker string) error {
 	for _, pair := range floatPairs {
 		value, err := pair.parser(pair.source[pair.title])
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		*pair.dest = value
+		pair.dest.Set(value)
 	}
 
 	for i, sale := range stockInfo.Sales {
 		if len(stockInfo.GrossIncome) > i {
 			grossIncome := stockInfo.GrossIncome[i]
 
-			if sale != nil && grossIncome != nil {
-				amount := (*grossIncome) / (*sale)
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, &amount)
+			if !sale.IsNaN() && !grossIncome.IsNaN() {
+				amount := grossIncome / sale
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.Percentage(amount))
 			} else {
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, nil)
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.Percentage(math.NaN()))
 			}
 		}
 	}
 
 	compoundInterestPairs2 := []struct {
-		dest     **float64
-		source   []*float64
+		dest     entities.FloatSetter
+		source   entities.ListFloatGetter
 		duration int
 	}{
 		{dest: &stockInfo.SalesGrowth5Years, source: stockInfo.Sales, duration: 5},
@@ -99,21 +101,18 @@ func getFinancialDataFromMarketWatch(ticker string) error {
 	}
 
 	for _, pair := range compoundInterestPairs2 {
-		source := pair.source
+		source := pair.source.GetListFloat()
 
 		if len(source)-pair.duration < 0 {
 			continue
 		}
 
-		if source[len(source)-pair.duration] != nil && source[len(source)-1] != nil {
-			amount := util.CalculateAnnualCompoundInterest(*source[len(source)-pair.duration], *source[len(source)-1], pair.duration)
-			*pair.dest = &amount
+		if !math.IsNaN(source[len(source)-pair.duration]) && !math.IsNaN(source[len(source)-1]) {
+			pair.dest.Set(util.CalculateAnnualCompoundInterest(source[len(source)-pair.duration], source[len(source)-1], pair.duration))
 		}
 	}
 
-	fmt.Println(util.MustJSONStringify(stockInfo, true))
-
-	return nil
+	return &stockInfo, nil
 }
 
 func getMarketwatchTableData(url string) (map[string][]string, []int, error) {

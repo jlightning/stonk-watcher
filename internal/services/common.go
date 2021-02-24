@@ -1,43 +1,71 @@
 package services
 
+import "stonk-watcher/internal/entities"
+
+type StockInfoDTO struct {
+	FinvizStockInfoDTO        *FinvizStockInfoDTO
+	MarketWatchInfoDTO        *MarketWatchInfoDTO
+	MorningStarPerformanceDTO *MorningStarPerformanceDTO
+}
+
 type FinvizStockInfoDTO struct {
 	CompanyName   string
 	Index         string
-	MarketCap     float64
-	Income        float64
-	PE            float64
-	DividendYield float64
-	DebtOnEquity  float64
-	GrossMargin   float64
-	TargetPrice   float64
-	Price         float64
-	ShortRatio    float64
+	MarketCap     entities.Money
+	Income        entities.Money
+	PE            entities.Percentage
+	DividendYield entities.Percentage
+	DebtOnEquity  entities.Percentage
+	GrossMargin   entities.Percentage
+	TargetPrice   entities.Money
+	Price         entities.Money
+	ShortRatio    entities.Percentage
 }
 
 type MarketWatchInfoDTO struct {
 	Years                    []int
-	Sales                    []*float64
-	SalesGrowth              []*float64
-	SalesGrowth5Years        *float64
-	SalesGrowth3Years        *float64
-	GrossIncome              []*float64
-	GrossIncomeMargin        []*float64
-	PretaxIncome             []*float64
-	NetIncome                []*float64
-	EPS                      []*float64
-	EPSGrowth                []*float64
-	EPSGrowth5Years          *float64
-	EPSGrowth3Years          *float64
-	TotalAssets              []*float64
-	TotalAssetsGrowth        []*float64
-	ShortTermDebt            []*float64
-	LongTermDebt             []*float64
-	TotalLiabilities         []*float64
-	Equity                   []*float64
-	EquiryGrowth5Years       *float64
-	EquiryGrowth3Years       *float64
-	FreeCashFlow             []*float64
-	FreeCashFlowGrowth       []*float64
-	FreeCashFlowGrowth5Years *float64
-	FreeCashFlowGrowth3Years *float64
+	Sales                    entities.ListMoney
+	SalesGrowth              entities.ListPercentage
+	SalesGrowth5Years        entities.Percentage
+	SalesGrowth3Years        entities.Percentage
+	GrossIncome              entities.ListMoney
+	GrossIncomeMargin        entities.ListPercentage
+	PretaxIncome             entities.ListMoney
+	NetIncome                entities.ListMoney
+	EPS                      entities.ListMoney
+	EPSGrowth                entities.ListPercentage
+	EPSGrowth5Years          entities.Percentage
+	EPSGrowth3Years          entities.Percentage
+	TotalAssets              entities.ListMoney
+	TotalAssetsGrowth        entities.ListPercentage
+	ShortTermDebt            entities.ListMoney
+	LongTermDebt             entities.ListMoney
+	TotalLiabilities         entities.ListMoney
+	Equity                   entities.ListMoney
+	EquiryGrowth5Years       entities.Percentage
+	EquiryGrowth3Years       entities.Percentage
+	FreeCashFlow             entities.ListMoney
+	FreeCashFlowGrowth       entities.ListPercentage
+	FreeCashFlowGrowth5Years entities.Percentage
+	FreeCashFlowGrowth3Years entities.Percentage
+}
+
+type MorningStarPerformanceResponseDTO struct {
+	Reported struct {
+		Columns   []string `json:"columnDefs"`
+		Collapsed struct {
+			Rows []struct {
+				Label      string   `json:"label"`
+				Datum      []string `json:"datum"`
+				Percentage bool     `json:"percentage"`
+			} `json:"rows"`
+		} `json:"Collapsed"`
+	} `json:"reported"`
+}
+
+type MorningStarPerformanceDTO struct {
+	ROI10Years   entities.Percentage
+	ROI5Years    entities.Percentage
+	ROILastYears entities.Percentage
+	ROITTM       entities.Percentage
 }

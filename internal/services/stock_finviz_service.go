@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strings"
 
@@ -64,7 +65,7 @@ func GetDataFromFinviz(ticker string) (*FinvizStockInfoDTO, error) {
 	stockInfo.Index = data["Index"]
 
 	floatPairs := []struct {
-		dest   *float64
+		dest   entities.FloatSetter
 		title  string
 		parser func(string) (float64, error)
 	}{
@@ -85,7 +86,7 @@ func GetDataFromFinviz(ticker string) (*FinvizStockInfoDTO, error) {
 			return nil, err
 		}
 
-		*pair.dest = value
+		pair.dest.Set(value)
 	}
 
 	return &stockInfo, nil

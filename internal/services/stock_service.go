@@ -1,16 +1,24 @@
 package services
 
-func GetStockInformation(ticker string) error {
-	//finvizStockInfo, err := GetDataFromFinviz(ticker)
-	//if err != nil {
-	//	return err
-	//}
-
-	err := GetDataFromMarketWatch(ticker)
+func GetStockInformation(ticker string) (*StockInfoDTO, error) {
+	finvizInfo, err := GetDataFromFinviz(ticker)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	//fmt.Printf("%#v", finvizStockInfo)
-	return nil
+	marketWatchInfo, err := GetDataFromMarketWatch(ticker)
+	if err != nil {
+		return nil, err
+	}
+
+	morningStarInfo, err := GetDataFromMorningstar(ticker)
+	if err != nil {
+		return nil, err
+	}
+
+	return &StockInfoDTO{
+		FinvizStockInfoDTO:        finvizInfo,
+		MarketWatchInfoDTO:        marketWatchInfo,
+		MorningStarPerformanceDTO: morningStarInfo,
+	}, nil
 }
