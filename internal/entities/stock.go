@@ -22,6 +22,7 @@ type FinvizStockInfoDTO struct {
 	RSI           Percentage `json:"rsi"`
 	EPSNextYear   Percentage `json:"eps_next_year"`
 	EPSNext5Years Percentage `json:"eps_next_5_years"`
+	EPSTTM        Money      `json:"epsttm"`
 }
 
 type MarketWatchInfoDTO struct {
@@ -57,8 +58,9 @@ type MarketWatchInfoDTO struct {
 }
 
 type MorningStarPerformanceDTO struct {
-	ROI10Years   Percentage `json:"roi_10_years"`
-	ROI5Years    Percentage `json:"roi_5_years"`
-	ROILastYears Percentage `json:"roi_last_year"`
-	ROITTM       Percentage `json:"roittm"`
+	ROI10Years      Percentage `json:"roi_10_years"`
+	ROI5Years       Percentage `json:"roi_5_years"`
+	ROILastYears    Percentage `json:"roi_last_year"`
+	ROITTM          Percentage `json:"roittm"`
+	LatestFairPrice float64    `json:"latest_fair_price""`
 }

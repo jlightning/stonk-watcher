@@ -71,7 +71,11 @@ func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
 }
 
 func getStockInfoVersion() (string, error) {
-	var defaultStockInfoDTO entities.StockInfoDTO
+	defaultStockInfoDTO := entities.StockInfoDTO{
+		FinvizStockInfoDTO:        &entities.FinvizStockInfoDTO{},
+		MarketWatchInfoDTO:        &entities.MarketWatchInfoDTO{},
+		MorningStarPerformanceDTO: &entities.MorningStarPerformanceDTO{},
+	}
 	bytes, err := json.Marshal(defaultStockInfoDTO)
 	if err != nil {
 		return "", err

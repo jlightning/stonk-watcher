@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"stonk-watcher/internal/entities"
+	"stonk-watcher/internal/util"
 	"strconv"
 	"strings"
 
@@ -27,19 +28,37 @@ type morningStarPerformanceResponseDTO struct {
 	} `json:"reported"`
 }
 
+type morningStarFairPriceDTO struct {
+	Chart struct {
+		ChartDatums struct {
+			Recent struct {
+				LatestFairValue string `json:"latestFairValue"`
+			} `json:"recent"`
+		} `json:"chartDatums"`
+	} `json:"chart"`
+}
+
 func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO, error) {
 	stockMSID, err := getMorningstarStockID(ticker, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	key, err := ioutil.ReadFile("morningstarKey.tmp.txt")
+	headerStr, err := ioutil.ReadFile("morningstarKey.tmp.json")
 	if err != nil {
 		return nil, err
 	}
-	keyStr := strings.Trim(string(key), "\n")
+	headerData := make(map[string]string)
+	if err := json.Unmarshal(headerStr, &headerData); err != nil {
+		return nil, err
+	}
 
-	performanceDTO, err := getMorningstarPerformance(stockMSID, keyStr)
+	performanceDTO, err := getMorningstarPerformance(stockMSID, headerData)
+	if err != nil {
+		return nil, err
+	}
+
+	fairPriceDTO, err := getMorningstarFairPrice(stockMSID, headerData)
 	if err != nil {
 		return nil, err
 	}
@@ -72,24 +91,55 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 	roi10 /= 10
 	roi5 /= 10
 
+	latestFairPrice, _ := util.ParseMoney(fairPriceDTO.Chart.ChartDatums.Recent.LatestFairValue)
+
 	response := entities.MorningStarPerformanceDTO{
-		ROI10Years:   entities.Percentage(roi10 / 100),
-		ROI5Years:    entities.Percentage(roi5 / 100),
-		ROILastYears: entities.Percentage(roi1 / 100),
-		ROITTM:       entities.Percentage(roittm / 100),
+		ROI10Years:      entities.Percentage(roi10 / 100),
+		ROI5Years:       entities.Percentage(roi5 / 100),
+		ROILastYears:    entities.Percentage(roi1 / 100),
+		ROITTM:          entities.Percentage(roittm / 100),
+		LatestFairPrice: latestFairPrice,
 	}
 
 	return &response, nil
 }
 
-func getMorningstarPerformance(stockMSID string, apiKey string) (*morningStarPerformanceResponseDTO, error) {
+func getMorningstarPerformance(stockMSID string, headerData map[string]string) (*morningStarPerformanceResponseDTO, error) {
 	c := colly.NewCollector()
 	apiUrl := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/operatingPerformance/v2/%s", stockMSID)
 
 	var responseDTO morningStarPerformanceResponseDTO
 
 	c.OnRequest(func(request *colly.Request) {
-		request.Headers.Add("ApiKey", apiKey)
+		for k, v := range headerData {
+			request.Headers.Add(k, v)
+		}
+	})
+	c.OnResponse(func(response *colly.Response) {
+		err := json.Unmarshal(response.Body, &responseDTO)
+		if err != nil {
+			logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
+		}
+	})
+
+	err := c.Visit(apiUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &responseDTO, nil
+}
+
+func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*morningStarFairPriceDTO, error) {
+	c := colly.NewCollector()
+	apiUrl := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/priceFairValue/v2/%s/data?secExchangeList=&languageId=en&locale=en&clientId=MDC&benchmarkId=category&component=sal-components-price-fairvalue&version=3.41.0", stockMSID)
+
+	var responseDTO morningStarFairPriceDTO
+
+	c.OnRequest(func(request *colly.Request) {
+		for k, v := range headerData {
+			request.Headers.Add(k, v)
+		}
 	})
 	c.OnResponse(func(response *colly.Response) {
 		err := json.Unmarshal(response.Body, &responseDTO)

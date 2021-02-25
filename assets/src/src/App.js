@@ -35,14 +35,16 @@ function App() {
           <th>Company Name</th>
           <th>RSI</th>
           <th>Shorted</th>
-          <th>ROIC (10 5 1 TTM)</th>
+          <th>ROIC (10 5 1)</th>
           <th>Sales Growth (5 3 1)</th>
           <th>EPS Growth (5 3 1)</th>
           <th>Equity Growth (5 3 1)</th>
           <th>Cash Flow Growth (5 3 1)</th>
-          <th>Price</th>
+          <th>EPS (TTM)</th>
           <th>Current P/E</th>
+          <th>Price</th>
           <th>Target Price</th>
+          <th>Morningstar Fair Price</th>
         </tr>
         </thead>
         <tbody>
@@ -59,7 +61,6 @@ function App() {
                 get(detail, 'morningstar_info.roi_10_years', '-'),
                 get(detail, 'morningstar_info.roi_5_years', '-'),
                 get(detail, 'morningstar_info.roi_last_year', '-'),
-                get(detail, 'morningstar_info.roittm', '-'),
               ];
               saleGrowths = [
                 get(detail, `marketwatch_info.sales_growth_5_years`, '-'),
@@ -147,11 +148,15 @@ function App() {
                     </Row>
                   </Container>
                 </td>
-                <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
+                <td>
+                  {get(details, `['${t}'].finviz_info.epsttm`, '-')}
+                </td>
                 <td>
                   <ColorBox dangerLevel={get(details, `['${t}'].finviz_info.pe.amount`, '-') === '-' ? 'danger' : ''}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
                 </td>
+                <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
                 <td>{get(details, `['${t}'].finviz_info.target_price`, '-')}</td>
+                <td>{get(details, `['${t}'].morningstar_info.latest_fair_price`, '-')}</td>
               </tr>
             )
           })
