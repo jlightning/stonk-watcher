@@ -1,9 +1,9 @@
 import './App.css';
-import {Col, Container, Row, Table} from "react-bootstrap";
+import {Button, Col, Container, Row, Table} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect, useState} from "react";
 import {get} from 'lodash';
-import {getReturnColorDangerLevel, getRSIDangerLevel, getShortFloatDangerLevel} from "./util/common";
+import {getPeDangerLevel, getReturnColorDangerLevel, getRSIDangerLevel, getShortFloatDangerLevel} from "./util/common";
 import {ColorBox} from "./component/colorbox";
 
 const SERVER_URL = 'http://localhost:8080/'
@@ -26,6 +26,13 @@ function App() {
     })
   }, [tickers])
 
+  const clearData = () => {
+    fetch(`${SERVER_URL}stock`, {
+      method: 'DELETE',
+    })
+    setTickers(prevState => [...prevState])
+  }
+
   return (
     <div className="App">
       <Table striped bordered hover className={'stock-table'}>
@@ -44,7 +51,7 @@ function App() {
           <th>Current P/E</th>
           <th>Price</th>
           <th>Target Price</th>
-          <th>Morningstar Fair Price</th>
+          <th>MS Fair Price</th>
         </tr>
         </thead>
         <tbody>
@@ -152,7 +159,7 @@ function App() {
                   {get(details, `['${t}'].finviz_info.epsttm`, '-')}
                 </td>
                 <td>
-                  <ColorBox dangerLevel={get(details, `['${t}'].finviz_info.pe.amount`, '-') === '-' ? 'danger' : ''}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
+                  <ColorBox dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
                 </td>
                 <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
                 <td>{get(details, `['${t}'].finviz_info.target_price`, '-')}</td>
@@ -163,6 +170,7 @@ function App() {
         }
         </tbody>
       </Table>
+      <Button variant="danger" onClick={clearData}>Clear data</Button>
     </div>
   );
 }

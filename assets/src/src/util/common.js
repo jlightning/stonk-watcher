@@ -48,3 +48,15 @@ export const getShortFloatDangerLevel = (amount) => {
 
   return 'danger';
 }
+
+export const getPeDangerLevel = (amount) => {
+  if (!amount && amount !== 0) {
+    return 'danger';
+  }
+
+  if (amount > 100) {
+    return 'danger'
+  }
+
+  return ''
+}

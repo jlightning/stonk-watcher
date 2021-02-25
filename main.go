@@ -18,14 +18,18 @@ func main() {
 	router := gin.Default()
 	router.Use(func(context *gin.Context) {
 		cors.New(cors.Options{
-			AllowedOrigins:   []string{"*"},
-			AllowedHeaders:   []string{"*"},
+			AllowedOrigins: []string{"*"},
+			//AllowedHeaders: []string{"*"},
+			//AllowedMethods:   []string{"*"},
 			AllowCredentials: true,
 			Debug:            false,
 		}).HandlerFunc(context.Writer, context.Request)
 	})
 	router.GET("/stock", handlers.StockHandler)
 	router.DELETE("/stock", handlers.TruncateStockInfo)
+	router.OPTIONS("/stock", func(context *gin.Context) {
+
+	})
 	router.GET("/stock/price", handlers.StockPriceHandler)
 	router.GET("/watchlist", handlers.WatchListHandler)
 	err = router.Run()

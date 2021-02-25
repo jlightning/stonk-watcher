@@ -94,6 +94,7 @@ func TruncateStockInfo() error {
 	}
 
 	for _, f := range files {
+		fmt.Println(f)
 		err := os.Remove(f)
 		if err != nil {
 			return err
