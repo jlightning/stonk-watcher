@@ -4,9 +4,10 @@ import (
 	"log"
 	"os"
 	"stonk-watcher/internal/handlers"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/cors"
 )
 
 func main() {
@@ -16,20 +17,16 @@ func main() {
 	}
 
 	router := gin.Default()
-	router.Use(func(context *gin.Context) {
-		cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-			//AllowedHeaders: []string{"*"},
-			//AllowedMethods:   []string{"*"},
-			AllowCredentials: true,
-			Debug:            false,
-		}).HandlerFunc(context.Writer, context.Request)
-	})
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	router.GET("/stock", handlers.StockHandler)
 	router.DELETE("/stock", handlers.TruncateStockInfo)
-	router.OPTIONS("/stock", func(context *gin.Context) {
-
-	})
 	router.GET("/stock/price", handlers.StockPriceHandler)
 	router.GET("/watchlist", handlers.WatchListHandler)
 	err = router.Run()

@@ -26,10 +26,11 @@ function App() {
     })
   }, [tickers])
 
-  const clearData = () => {
-    fetch(`${SERVER_URL}stock`, {
+  const clearData = async () => {
+    await fetch(`${SERVER_URL}stock`, {
       method: 'DELETE',
     })
+    setDetails({});
     setTickers(prevState => [...prevState])
   }
 
@@ -95,17 +96,20 @@ function App() {
                 <td>{t}</td>
                 <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
                 <td>
-                  <ColorBox dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
+                  <ColorBox
+                    dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
                 </td>
                 <td>
-                  <ColorBox dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                  <ColorBox
+                    dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
                 </td>
                 <td>
                   <Container>
                     <Row>
                       {roiGrowths.map(r => (
                         <Col>
-                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                          <ColorBox
+                            dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
                         </Col>
                       ))}
                     </Row>
@@ -116,7 +120,8 @@ function App() {
                     <Row>
                       {saleGrowths.map(r => (
                         <Col>
-                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                          <ColorBox
+                            dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
                         </Col>
                       ))}
                     </Row>
@@ -127,7 +132,8 @@ function App() {
                     <Row>
                       {epsGrowths.map(r => (
                         <Col>
-                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                          <ColorBox
+                            dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
                         </Col>
                       ))}
                     </Row>
@@ -138,7 +144,8 @@ function App() {
                     <Row>
                       {equityGrowths.map(r => (
                         <Col>
-                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                          <ColorBox
+                            dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
                         </Col>
                       ))}
                     </Row>
@@ -149,7 +156,8 @@ function App() {
                     <Row>
                       {cashFlowGrowths.map(r => (
                         <Col>
-                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                          <ColorBox
+                            dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
                         </Col>
                       ))}
                     </Row>
@@ -159,7 +167,8 @@ function App() {
                   {get(details, `['${t}'].finviz_info.epsttm`, '-')}
                 </td>
                 <td>
-                  <ColorBox dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
+                  <ColorBox
+                    dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
                 </td>
                 <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
                 <td>{get(details, `['${t}'].finviz_info.target_price`, '-')}</td>
