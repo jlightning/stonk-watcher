@@ -13,7 +13,11 @@ func WatchListHandler(c *gin.Context) {
 		"AMZN",
 		"GOOG",
 		"TSLA",
+		"VMW",
 		"XOM",
 		"PFE",
+		"NFLX",
+		"FTI",
+		"GME",
 	})
 }

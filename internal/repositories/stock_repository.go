@@ -1,11 +1,12 @@
 package repositories
 
 import (
+	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"stonk-watcher/internal/config"
 	"stonk-watcher/internal/entities"
 	"strings"
 	"time"
@@ -31,15 +32,34 @@ func GetStockInfo(ticker string) (*entities.StockInfoDTO, error) {
 		return nil, err
 	}
 
-	return res.Content.(*entities.StockInfoDTO), nil
+	content, ok := res.Content.(*entities.StockInfoDTO)
+	if !ok {
+		return nil, errors.New("invalid stock data")
+	}
+
+	version, err := getStockInfoVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	if res.Version != version {
+		return nil, nil
+	}
+
+	return content, nil
 }
 
 func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
+	version, err := getStockInfoVersion()
+	if err != nil {
+		return err
+	}
+
 	ticker = strings.ToLower(ticker)
 	key := fmt.Sprintf("stock-info-%s.json", ticker)
 	bytes, err := json.Marshal(CommonRepositoryRecord{
 		ID:        uuid.NewString(),
-		Version:   config.GetVersion(),
+		Version:   version,
 		Content:   dto,
 		CreatedAt: time.Now(),
 	})
@@ -48,6 +68,19 @@ func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
 	}
 
 	return writeFile(dataPath+key, bytes, 0600)
+}
+
+func getStockInfoVersion() (string, error) {
+	var defaultStockInfoDTO entities.StockInfoDTO
+	bytes, err := json.Marshal(defaultStockInfoDTO)
+	if err != nil {
+		return "", err
+	}
+
+	h := md5.New()
+	h.Write(bytes)
+
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 func TruncateStockInfo() error {

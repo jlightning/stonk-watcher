@@ -18,8 +18,10 @@ type FinvizStockInfoDTO struct {
 	GrossMargin   Percentage `json:"gross_margin"`
 	TargetPrice   Money      `json:"target_price"`
 	Price         Money      `json:"price"`
-	ShortRatio    Percentage `json:"short_ratio"`
+	ShortFloat    Percentage `json:"short_float"`
 	RSI           Percentage `json:"rsi"`
+	EPSNextYear   Percentage `json:"eps_next_year"`
+	EPSNext5Years Percentage `json:"eps_next_5_years"`
 }
 
 type MarketWatchInfoDTO struct {

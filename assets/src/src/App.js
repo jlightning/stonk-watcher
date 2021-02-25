@@ -3,6 +3,8 @@ import {Col, Container, Row, Table} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect, useState} from "react";
 import {get} from 'lodash';
+import {getReturnColorDangerLevel, getRSIDangerLevel, getShortFloatDangerLevel} from "./util/common";
+import {ColorBox} from "./component/colorbox";
 
 const SERVER_URL = 'http://localhost:8080/'
 
@@ -32,6 +34,7 @@ function App() {
           <th>Ticker</th>
           <th>Company Name</th>
           <th>RSI</th>
+          <th>Shorted</th>
           <th>ROIC (10 5 1 TTM)</th>
           <th>Sales Growth (5 3 1)</th>
           <th>EPS Growth (5 3 1)</th>
@@ -83,89 +86,71 @@ function App() {
               <tr>
                 <td>{t}</td>
                 <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
-                <td>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</td>
+                <td>
+                  <ColorBox dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
+                </td>
+                <td>
+                  <ColorBox dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                </td>
                 <td>
                   <Container>
                     <Row>
-                      {roiGrowths.map(r => {
-                        let className = 'bg-success';
-                        if (get(r, 'amount') < 0.1) {
-                          className = 'bg-warning';
-                        }
-                        if (get(r, 'amount') <= 0) {
-                          className = 'bg-danger';
-                        }
-                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
-                      })}
+                      {roiGrowths.map(r => (
+                        <Col>
+                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                        </Col>
+                      ))}
                     </Row>
                   </Container>
                 </td>
                 <td>
                   <Container>
                     <Row>
-                      {saleGrowths.map(r => {
-                        let className = 'bg-success';
-                        if (get(r, 'amount') < 0.1) {
-                          className = 'bg-warning';
-                        }
-                        if (get(r, 'amount') <= 0) {
-                          className = 'bg-danger';
-                        }
-                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
-                      })}
+                      {saleGrowths.map(r => (
+                        <Col>
+                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                        </Col>
+                      ))}
                     </Row>
                   </Container>
                 </td>
                 <td>
                   <Container>
                     <Row>
-                      {epsGrowths.map(r => {
-                        let className = 'bg-success';
-                        if (get(r, 'amount') < 0.1) {
-                          className = 'bg-warning';
-                        }
-                        if (get(r, 'amount') <= 0) {
-                          className = 'bg-danger';
-                        }
-                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
-                      })}
+                      {epsGrowths.map(r => (
+                        <Col>
+                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                        </Col>
+                      ))}
                     </Row>
                   </Container>
                 </td>
                 <td>
                   <Container>
                     <Row>
-                      {equityGrowths.map(r => {
-                        let className = 'bg-success';
-                        if (get(r, 'amount') < 0.1) {
-                          className = 'bg-warning';
-                        }
-                        if (get(r, 'amount') <= 0) {
-                          className = 'bg-danger';
-                        }
-                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
-                      })}
+                      {equityGrowths.map(r => (
+                        <Col>
+                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                        </Col>
+                      ))}
                     </Row>
                   </Container>
                 </td>
                 <td>
                   <Container>
                     <Row>
-                      {cashFlowGrowths.map(r => {
-                        let className = 'bg-success';
-                        if (get(r, 'amount') < 0.1) {
-                          className = 'bg-warning';
-                        }
-                        if (get(r, 'amount') <= 0) {
-                          className = 'bg-danger';
-                        }
-                        return <Col className={className}>{get(r, 'percent', '-')}</Col>
-                      })}
+                      {cashFlowGrowths.map(r => (
+                        <Col>
+                          <ColorBox dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                        </Col>
+                      ))}
                     </Row>
                   </Container>
                 </td>
                 <td>{get(details, `['${t}'].finviz_info.price`, '-')}</td>
-                <td>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</td>
+                <td>
+                  <ColorBox dangerLevel={get(details, `['${t}'].finviz_info.pe.amount`, '-') === '-' ? 'danger' : ''}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
+                </td>
                 <td>{get(details, `['${t}'].finviz_info.target_price`, '-')}</td>
               </tr>
             )

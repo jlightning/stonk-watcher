@@ -77,8 +77,10 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 		{dest: &stockInfo.GrossMargin, title: "Gross Margin", parser: util.ParsePercentage},
 		{dest: &stockInfo.TargetPrice, title: "Target Price", parser: util.ParseMoney},
 		{dest: &stockInfo.Price, title: "Price", parser: util.ParseMoney},
-		{dest: &stockInfo.ShortRatio, title: "Short Ratio", parser: util.ParseMoney},
+		{dest: &stockInfo.ShortFloat, title: "Short Float", parser: util.ParsePercentage},
 		{dest: &stockInfo.RSI, title: "RSI (14)", parser: util.ParseMoney},
+		{dest: &stockInfo.EPSNextYear, title: "EPS next Y", parser: util.ParsePercentage},
+		{dest: &stockInfo.EPSNext5Years, title: "EPS next 5Y", parser: util.ParsePercentage},
 	}
 
 	for _, pair := range floatPairs {

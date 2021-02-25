@@ -48,6 +48,8 @@ func ParseMoney(str string) (float64, error) {
 		str = str[:len(str)-1]
 	}
 
+	str = strings.ReplaceAll(str, ",", "")
+
 	res, err := strconv.ParseFloat(str, 64)
 	if err != nil {
 		return 0, err
@@ -75,6 +77,8 @@ func ParsePercentage(str string) (float64, error) {
 	}
 
 	str = str[:len(str)-1]
+
+	str = strings.ReplaceAll(str, ",", "")
 
 	res, err := strconv.ParseFloat(str, 64)
 	if err != nil {
