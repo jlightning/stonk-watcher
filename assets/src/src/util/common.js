@@ -49,6 +49,22 @@ export const getShortFloatDangerLevel = (amount) => {
   return 'danger';
 }
 
+export const getDebtEquityDangerLevel = (amount) => {
+  if (!amount && amount !== 0) {
+    return '';
+  }
+
+  if (amount <= 0.6) {
+    return 'good';
+  }
+
+  if (amount > 1.1) {
+     return 'danger';
+  }
+
+  return '';
+}
+
 export const getPeDangerLevel = (amount) => {
   if (!amount && amount !== 0) {
     return 'danger';

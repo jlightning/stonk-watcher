@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect, useState} from "react";
 import {get, takeRight} from 'lodash';
 import {
+  getDebtEquityDangerLevel,
   getDiscountDangerLevel,
   getGrossIncomeMarginDangerLevel,
   getPeDangerLevel,
@@ -18,14 +19,25 @@ const SERVER_URL = 'http://localhost:8080/'
 function App() {
   const [tickers, setTickers] = useState([]);
   const [tickerStr, setTickerStr] = useState('');
-  const [details, setDetails] = useState({})
+  const [details, setDetails] = useState({});
+  const [prices, setPrices] = useState({});
 
   useEffect(() => {
     (async () => {
       const result = await fetch(`${SERVER_URL}watchlist`).then(r => r.json());
       setTickers(result);
     })()
-  }, [])
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      tickers.forEach(async t => {
+        const res = await fetch(`${SERVER_URL}stock/price?ticker=${t}`).then(r => r.json());
+        setPrices(prevDate => ({...prevDate, [t]: res}));
+      })
+    }, 10000);
+    return () => {clearInterval(interval)}
+  });
 
   useEffect(() => {
     tickers.forEach(async t => {
@@ -84,8 +96,14 @@ function App() {
               <th><Container><Row className={'row-th'}>Shorted</Row></Container></th>
               <th>
                 <Container>
+                  <Row className={'row-th'}>Debt /</Row>
+                  <Row className={'row-th'}>Equity</Row>
+                </Container>
+              </th>
+              <th>
+                <Container>
                   <Row className={'row-th'}>Gross Income</Row>
-                  <Row className={'row-th'}>Margin (2 1)</Row>
+                  <Row className={'row-th'}>Margin (3 2 1)</Row>
                 </Container>
               </th>
               <th><Container><Row className={'row-th'}>ROIC (10 5 1)</Row></Container></th>
@@ -159,7 +177,8 @@ function App() {
                     get(detail, `marketwatch_info.free_cash_flow_growth_last_year`, '-'),
                   ]
                 }
-                let price = get(details, `['${t}'].finviz_info.price`, '-');
+                let price = get(prices, `['${t}'].price`);
+                price = price || get(details, `['${t}'].finviz_info.price`, '-');
                 let targetPrice = get(details, `['${t}'].finviz_info.target_price`, '-');
                 let msFairPrice = get(details, `['${t}'].morningstar_info.latest_fair_price`, '-');
                 let targetPriceDiscount = (targetPrice - price) * 100 / price;
@@ -176,6 +195,10 @@ function App() {
                       <td>
                         <ColorBox
                           dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                      </td>
+                      <td>
+                        <ColorBox
+                          dangerLevel={getDebtEquityDangerLevel(get(details, `['${t}'].finviz_info.debt_on_equity.amount`))}>{get(details, `['${t}'].finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
                       </td>
                       <td>
                         <Container>
@@ -281,9 +304,12 @@ function App() {
                     </tr>
                     <tr>
                       <td colSpan={2}>URL</td>
-                      <td colSpan={4}><a href={get(details, `['${t}'].finviz_info.url`)} target='_blank'>{get(details, `['${t}'].finviz_info.url`)}</a></td>
-                      <td colSpan={3}><a href={get(details, `['${t}'].marketwatch_info.url`)} target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
-                      <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)} target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
+                      <td colSpan={4}><a href={get(details, `['${t}'].finviz_info.url`)}
+                                         target='_blank'>{get(details, `['${t}'].finviz_info.url`)}</a></td>
+                      <td colSpan={3}><a href={get(details, `['${t}'].marketwatch_info.url`)}
+                                         target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
+                      <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)}
+                                         target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
                       <td colSpan={3}></td>
                     </tr>
                   </>

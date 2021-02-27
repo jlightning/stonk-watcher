@@ -36,6 +36,7 @@ func StockPriceHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
+
 	c.JSON(http.StatusOK, resp)
 }
 
