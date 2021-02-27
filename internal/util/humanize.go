@@ -56,6 +56,8 @@ func ParseMoney(str string) (float64, error) {
 	}
 
 	switch unit {
+	case "T":
+		res *= 1000000000000
 	case "B":
 		res *= 1000000000
 	case "M":

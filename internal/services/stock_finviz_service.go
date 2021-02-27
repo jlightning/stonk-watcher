@@ -74,6 +74,7 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 		{dest: &stockInfo.MarketCap, title: "Market Cap", parser: util.ParseMoney},
 		{dest: &stockInfo.Income, title: "Income", parser: util.ParseMoney},
 		{dest: &stockInfo.PE, title: "P/E", parser: util.ParseMoney},
+		{dest: &stockInfo.PB, title: "P/B", parser: util.ParseMoney},
 		{dest: &stockInfo.DividendYield, title: "Dividend %", parser: util.ParsePercentage},
 		{dest: &stockInfo.DebtOnEquity, title: "Debt/Eq", parser: util.ParseMoney},
 		{dest: &stockInfo.GrossMargin, title: "Gross Margin", parser: util.ParsePercentage},

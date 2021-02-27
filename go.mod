@@ -17,5 +17,6 @@ require (
 	github.com/sirupsen/logrus v1.8.0
 	github.com/stretchr/testify v1.4.0
 	github.com/temoto/robotstxt v1.1.1 // indirect
+	github.com/thoas/go-funk v0.7.0
 	google.golang.org/protobuf v1.24.0 // indirect
 )

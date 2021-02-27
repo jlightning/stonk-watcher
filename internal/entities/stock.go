@@ -13,6 +13,7 @@ type FinvizStockInfoDTO struct {
 	MarketCap     Money      `json:"market_cap"`
 	Income        Money      `json:"income"`
 	PE            Percentage `json:"pe"`
+	PB            Percentage `json:"pb"`
 	DividendYield Percentage `json:"dividend_yield"`
 	DebtOnEquity  Percentage `json:"debt_on_equity"`
 	GrossMargin   Percentage `json:"gross_margin"`

@@ -35,7 +35,7 @@ function App() {
         const res = await fetch(`${SERVER_URL}stock/price?ticker=${t}`).then(r => r.json());
         setPrices(prevDate => ({...prevDate, [t]: res}));
       })
-    }, 10000);
+    }, 15000);
     return () => {clearInterval(interval)}
   });
 
@@ -83,6 +83,7 @@ function App() {
             />
             <InputGroup.Append>
               <Button variant="primary" onClick={updateWatchList}>Update</Button>
+              <Button variant="danger" onClick={clearData}>Clear data</Button>
             </InputGroup.Append>
           </InputGroup>
         </Row>
@@ -100,6 +101,7 @@ function App() {
                   <Row className={'row-th'}>Equity</Row>
                 </Container>
               </th>
+              <th><Container><Row className={'row-th'}>P/B</Row></Container></th>
               <th>
                 <Container>
                   <Row className={'row-th'}>Gross Income</Row>
@@ -181,8 +183,8 @@ function App() {
                 price = price || get(details, `['${t}'].finviz_info.price`, '-');
                 let targetPrice = get(details, `['${t}'].finviz_info.target_price`, '-');
                 let msFairPrice = get(details, `['${t}'].morningstar_info.latest_fair_price`, '-');
-                let targetPriceDiscount = (targetPrice - price) * 100 / price;
-                let msFairPriceDiscount = (msFairPrice - price) * 100 / price;
+                let targetPriceDiscount = (targetPrice - price) * 100 / targetPrice;
+                let msFairPriceDiscount = (msFairPrice - price) * 100 / msFairPrice;
                 return (
                   <>
                     <tr>
@@ -199,6 +201,9 @@ function App() {
                       <td>
                         <ColorBox
                           dangerLevel={getDebtEquityDangerLevel(get(details, `['${t}'].finviz_info.debt_on_equity.amount`))}>{get(details, `['${t}'].finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
+                      </td>
+                      <td>
+                        {get(details, `['${t}'].finviz_info.pb.amount`, '-')}
                       </td>
                       <td>
                         <Container>
@@ -310,7 +315,7 @@ function App() {
                                          target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
                       <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)}
                                          target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
-                      <td colSpan={3}></td>
+                      <td colSpan={3}>-</td>
                     </tr>
                   </>
                 )
@@ -318,7 +323,6 @@ function App() {
             }
             </tbody>
           </Table>
-          <Button variant="danger" onClick={clearData}>Clear data</Button>
         </Row>
       </Container>
     </div>

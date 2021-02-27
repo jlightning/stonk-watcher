@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"
+	"github.com/thoas/go-funk"
 )
 
 var defaultWatchlist = []string{
@@ -45,6 +46,8 @@ func UpdateWatchlistHandler(c *gin.Context) {
 			arr2 = append(arr2, item)
 		}
 	}
+
+	arr2 = funk.UniqString(arr2)
 
 	err = repositories.PersistWatchlist(arr2)
 	if err != nil {
