@@ -1,6 +1,6 @@
 const style = {
-  paddingLeft: '3px',
-  paddingRight: '3px',
+  paddingLeft: '0.1rem',
+  paddingRight: '0.1rem',
 }
 
 const goodColorClass = 'bg-success';

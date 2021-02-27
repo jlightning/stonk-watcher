@@ -2,9 +2,10 @@ import './App.css';
 import {Button, Col, Container, FormControl, InputGroup, Row, Table} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect, useState} from "react";
-import {get} from 'lodash';
+import {get, takeRight} from 'lodash';
 import {
   getDiscountDangerLevel,
+  getGrossIncomeMarginDangerLevel,
   getPeDangerLevel,
   getReturnColorDangerLevel,
   getRSIDangerLevel,
@@ -44,7 +45,7 @@ function App() {
   }
 
   const updateWatchList = async () => {
-    const result =await fetch(`${SERVER_URL}watchlist`, {
+    const result = await fetch(`${SERVER_URL}watchlist`, {
       method: 'POST',
       body: tickerStr,
     }).then(r => r.json());
@@ -81,6 +82,12 @@ function App() {
               <th><Container><Row className={'row-th'}>Company Name</Row></Container></th>
               <th><Container><Row className={'row-th'}>RSI</Row></Container></th>
               <th><Container><Row className={'row-th'}>Shorted</Row></Container></th>
+              <th>
+                <Container>
+                  <Row className={'row-th'}>Gross Income</Row>
+                  <Row className={'row-th'}>Margin (2 1)</Row>
+                </Container>
+              </th>
               <th><Container><Row className={'row-th'}>ROIC (10 5 1)</Row></Container></th>
               <th><Container><Row className={'row-th'}>Sales Growth (5 3 1)</Row></Container></th>
               <th><Container><Row className={'row-th'}>EPS Growth (5 3 1)</Row></Container></th>
@@ -122,8 +129,10 @@ function App() {
                 let epsGrowths = [];
                 let equityGrowths = [];
                 let cashFlowGrowths = [];
+                let grossIncomeMargins = [];
                 const detail = get(details, `['${t}']`)
                 if (detail) {
+                  grossIncomeMargins = get(detail, 'marketwatch_info.gross_income_margin');
                   roiGrowths = [
                     get(detail, 'morningstar_info.roi_10_years', '-'),
                     get(detail, 'morningstar_info.roi_5_years', '-'),
@@ -156,107 +165,128 @@ function App() {
                 let targetPriceDiscount = (targetPrice - price) * 100 / price;
                 let msFairPriceDiscount = (msFairPrice - price) * 100 / price;
                 return (
-                  <tr>
-                    <td>{t}</td>
-                    <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
-                    <td>
-                      <ColorBox
-                        dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
-                    </td>
-                    <td>
-                      <ColorBox
-                        dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          {roiGrowths.map(r => (
-                            <Col>
-                              <ColorBox
-                                dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          {saleGrowths.map(r => (
-                            <Col>
-                              <ColorBox
-                                dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          {epsGrowths.map(r => (
-                            <Col>
-                              <ColorBox
-                                dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          {equityGrowths.map(r => (
-                            <Col>
-                              <ColorBox
-                                dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          {cashFlowGrowths.map(r => (
-                            <Col>
-                              <ColorBox
-                                dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                            </Col>
-                          ))}
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      {get(details, `['${t}'].finviz_info.dividend_yield.percent`, '-')}
-                    </td>
-                    <td>
-                      {get(details, `['${t}'].finviz_info.epsttm`, '-')}
-                    </td>
-                    <td>
-                      <ColorBox
-                        dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
-                    </td>
-                    <td>{price}</td>
-                    <td>
-                      <Container>
-                        <Row>
-                          <Col>{targetPrice}</Col>
-                          <Col><ColorBox
-                            dangerLevel={getDiscountDangerLevel(targetPriceDiscount)}>{`${targetPriceDiscount.toFixed(2)}%`}</ColorBox></Col>
-                        </Row>
-                      </Container>
-                    </td>
-                    <td>
-                      <Container>
-                        <Row>
-                          <Col>{msFairPrice}</Col>
-                          <Col><ColorBox
-                            dangerLevel={getDiscountDangerLevel(msFairPriceDiscount)}>{`${msFairPriceDiscount.toFixed(2)}%`}</ColorBox></Col>
-                        </Row>
-                      </Container>
-                    </td>
-                  </tr>
+                  <>
+                    <tr>
+                      <td>{t}</td>
+                      <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
+                      <td>
+                        <ColorBox
+                          dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
+                      </td>
+                      <td>
+                        <ColorBox
+                          dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {takeRight(grossIncomeMargins, 3).map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getGrossIncomeMarginDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {roiGrowths.map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {saleGrowths.map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {epsGrowths.map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {equityGrowths.map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            {cashFlowGrowths.map(r => (
+                              <Col>
+                                <ColorBox
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                              </Col>
+                            ))}
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        {get(details, `['${t}'].finviz_info.dividend_yield.percent`, '-')}
+                      </td>
+                      <td>
+                        {get(details, `['${t}'].finviz_info.epsttm`, '-')}
+                      </td>
+                      <td>
+                        <ColorBox
+                          dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
+                      </td>
+                      <td>{price}</td>
+                      <td>
+                        <Container>
+                          <Row>
+                            <Col>{targetPrice}</Col>
+                            <Col><ColorBox
+                              dangerLevel={getDiscountDangerLevel(targetPriceDiscount)}>{`${targetPriceDiscount.toFixed(2)}%`}</ColorBox></Col>
+                          </Row>
+                        </Container>
+                      </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            <Col>{msFairPrice}</Col>
+                            <Col><ColorBox
+                              dangerLevel={getDiscountDangerLevel(msFairPriceDiscount)}>{`${msFairPriceDiscount.toFixed(2)}%`}</ColorBox></Col>
+                          </Row>
+                        </Container>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={2}>URL</td>
+                      <td colSpan={4}><a href={get(details, `['${t}'].finviz_info.url`)} target='_blank'>{get(details, `['${t}'].finviz_info.url`)}</a></td>
+                      <td colSpan={3}><a href={get(details, `['${t}'].marketwatch_info.url`)} target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
+                      <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)} target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
+                      <td colSpan={3}></td>
+                    </tr>
+                  </>
                 )
               })
             }

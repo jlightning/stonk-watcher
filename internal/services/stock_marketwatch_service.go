@@ -21,7 +21,9 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 	cashFlowUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/cash-flow", strings.ToLower(ticker))
 	balanceSheetUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s/financials/balance-sheet", strings.ToLower(ticker))
 
-	var stockInfo entities.MarketWatchInfoDTO
+	stockInfo := entities.MarketWatchInfoDTO{
+		Url: financialUrl,
+	}
 
 	incomeStmData, years, err := getMarketwatchTableData(financialUrl)
 	if err != nil {

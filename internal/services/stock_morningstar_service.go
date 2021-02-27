@@ -39,7 +39,7 @@ type morningStarFairPriceDTO struct {
 }
 
 func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO, error) {
-	stockMSID, err := getMorningstarStockID(ticker, nil)
+	stockMSID, url, err := getMorningstarStockID(ticker, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +99,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		ROILastYears:    entities.Percentage(roi1 / 100),
 		ROITTM:          entities.Percentage(roittm / 100),
 		LatestFairPrice: latestFairPrice,
+		Url:             url,
 	}
 
 	return &response, nil
@@ -156,7 +157,7 @@ func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*m
 	return &responseDTO, nil
 }
 
-func getMorningstarStockID(ticker string, prefix *string) (string, error) {
+func getMorningstarStockID(ticker string, prefix *string) (string, string, error) {
 	c := colly.NewCollector()
 
 	if prefix == nil {
@@ -181,8 +182,8 @@ func getMorningstarStockID(ticker string, prefix *string) (string, error) {
 			_prefix := "xnys"
 			return getMorningstarStockID(ticker, &_prefix)
 		}
-		return "", err
+		return "", "", err
 	}
 
-	return stockMSID, nil
+	return stockMSID, url, nil
 }

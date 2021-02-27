@@ -80,3 +80,23 @@ export const getDiscountDangerLevel = (amount) => {
 
   return '';
 }
+
+export const getGrossIncomeMarginDangerLevel = (amount) => {
+  if (!amount && amount !== 0) {
+    return '';
+  }
+
+  if (amount <= 0.20) {
+    return 'danger';
+  }
+
+  if (amount <= 0.40) {
+    return 'warn';
+  }
+
+  if (amount >= 0.70) {
+    return 'good';
+  }
+
+  return '';
+}

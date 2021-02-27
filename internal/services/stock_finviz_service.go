@@ -14,7 +14,9 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 
 	c := colly.NewCollector()
 
-	var stockInfo entities.FinvizStockInfoDTO
+	stockInfo := entities.FinvizStockInfoDTO{
+		Url: url,
+	}
 
 	data := map[string]string{}
 	// getting stock table
