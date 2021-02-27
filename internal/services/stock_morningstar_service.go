@@ -70,7 +70,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 				roiStr := row.Datum[idx]
 				roi, err := strconv.ParseFloat(roiStr, 64)
 				if err != nil {
-					return nil, err
+					continue
 				}
 				if regexp.MustCompile("^[0-9]+$").MatchString(col) {
 					roi10 += roi

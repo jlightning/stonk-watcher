@@ -31,6 +31,8 @@ Temporary Items
 *.tmp.*
 .~lock.*
 data
+bin
+tmp
 
 # IDE files
 .vscode

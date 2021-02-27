@@ -1,7 +1,6 @@
 const style = {
   paddingLeft: '3px',
   paddingRight: '3px',
-  minWidth: '20px'
 }
 
 const goodColorClass = 'bg-success';

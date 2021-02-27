@@ -60,3 +60,23 @@ export const getPeDangerLevel = (amount) => {
 
   return ''
 }
+
+export const getDiscountDangerLevel = (amount) => {
+  if (!amount && amount !== 0) {
+    return '';
+  }
+
+  if (amount < 0) {
+    return 'danger';
+  }
+
+  if (amount > 10 && amount < 20) {
+    return 'warn';
+  }
+
+  if (amount > 20) {
+    return 'good'
+  }
+
+  return '';
+}
