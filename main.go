@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"log"
 	"os"
 	"stonk-watcher/internal/handlers"
@@ -9,6 +10,9 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
+
+//go:embed assets/src/build/**/* assets/src/build/*
+var staticFileFS embed.FS
 
 func main() {
 	err := os.Mkdir("data", 0600)
@@ -30,6 +34,8 @@ func main() {
 	router.GET("/stock/price", handlers.StockPriceHandler)
 	router.GET("/watchlist", handlers.GetWatchlistHandler)
 	router.POST("/watchlist", handlers.UpdateWatchlistHandler)
+	router.GET("/", handlers.StaticHandler(staticFileFS))
+	router.GET("/static/*file", handlers.StaticHandler(staticFileFS))
 	err = router.Run()
 	if err != nil {
 		log.Fatal(err)
