@@ -1,5 +1,5 @@
 import './App.css';
-import {Button, Col, Container, FormControl, InputGroup, Row, Table} from "react-bootstrap";
+import {Button, Col, Container, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {useEffect, useState} from "react";
 import {get, takeRight} from 'lodash';
@@ -13,6 +13,8 @@ import {
   getShortFloatDangerLevel
 } from "./util/common";
 import {ColorBox} from "./component/colorbox";
+import {FairPriceCalculator} from "./component/fairprice-calculator";
+import {FaEdit} from "react-icons/all";
 
 const SERVER_URL = 'http://localhost:8080/'
 
@@ -21,6 +23,8 @@ function App() {
   const [tickerStr, setTickerStr] = useState('');
   const [details, setDetails] = useState({});
   const [prices, setPrices] = useState({});
+  const [show, setShow] = useState(false);
+  const [fairPriceTickerInfo, setFairPriceTickerInfo] = useState({});
 
   useEffect(() => {
     (async () => {
@@ -62,6 +66,11 @@ function App() {
       body: tickerStr,
     }).then(r => r.json());
     setTickers(result);
+  }
+
+  const showMyFairPriceModal = (t) => {
+    setFairPriceTickerInfo(t);
+    setShow(true);
   }
 
   return (
@@ -136,6 +145,12 @@ function App() {
               <th>
                 <Container>
                   <Row className={'row-th'}>MS</Row>
+                  <Row className={'row-th'}>Fair Price</Row>
+                </Container>
+              </th>
+              <th>
+                <Container>
+                  <Row className={'row-th'}>My</Row>
                   <Row className={'row-th'}>Fair Price</Row>
                 </Container>
               </th>
@@ -306,6 +321,15 @@ function App() {
                           </Row>
                         </Container>
                       </td>
+                      <td>
+                        <Container>
+                          <Row>
+                            <Col>
+                              <button className={'no-style'} onClick={e => showMyFairPriceModal(detail)}><FaEdit/></button>
+                            </Col>
+                          </Row>
+                        </Container>
+                      </td>
                     </tr>
                     <tr>
                       <td colSpan={2}>URL</td>
@@ -315,7 +339,7 @@ function App() {
                                          target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
                       <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)}
                                          target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
-                      <td colSpan={3}>-</td>
+                      <td colSpan={6}>-</td>
                     </tr>
                   </>
                 )
@@ -325,6 +349,24 @@ function App() {
           </Table>
         </Row>
       </Container>
+
+      <Modal
+        show={show}
+        onHide={e => setShow(false)}
+        backdrop="static"
+        keyboard={false}
+        className={'fairprice-edit-modal'}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Fair Price Calculator</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <FairPriceCalculator tickerInfo={fairPriceTickerInfo}/>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="primary">Understood</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

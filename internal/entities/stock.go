@@ -8,23 +8,24 @@ type StockInfoDTO struct {
 }
 
 type FinvizStockInfoDTO struct {
-	CompanyName   string     `json:"company_name"`
-	Index         string     `json:"index"`
-	MarketCap     Money      `json:"market_cap"`
-	Income        Money      `json:"income"`
-	PE            Percentage `json:"pe"`
-	PB            Percentage `json:"pb"`
-	DividendYield Percentage `json:"dividend_yield"`
-	DebtOnEquity  Percentage `json:"debt_on_equity"`
-	GrossMargin   Percentage `json:"gross_margin"`
-	TargetPrice   Money      `json:"target_price"`
-	Price         Money      `json:"price"`
-	ShortFloat    Percentage `json:"short_float"`
-	RSI           Percentage `json:"rsi"`
-	EPSNextYear   Percentage `json:"eps_next_year"`
-	EPSNext5Years Percentage `json:"eps_next_5_years"`
-	EPSTTM        Money      `json:"epsttm"`
-	Url           string     `json:"url"`
+	CompanyName      string     `json:"company_name"`
+	Index            string     `json:"index"`
+	MarketCap        Money      `json:"market_cap"`
+	Income           Money      `json:"income"`
+	PE               Percentage `json:"pe"`
+	PB               Percentage `json:"pb"`
+	DividendYield    Percentage `json:"dividend_yield"`
+	DebtOnEquity     Percentage `json:"debt_on_equity"`
+	GrossMargin      Percentage `json:"gross_margin"`
+	TargetPrice      Money      `json:"target_price"`
+	Price            Money      `json:"price"`
+	ShortFloat       Percentage `json:"short_float"`
+	RSI              Percentage `json:"rsi"`
+	EPSNextYear      Percentage `json:"eps_next_year"`
+	EPSNext5Years    Percentage `json:"eps_next_5_years"`
+	EPSTTM           Money      `json:"epsttm"`
+	Url              string     `json:"url"`
+	ShareOutstanding Money      `json:"share_outstanding"`
 }
 
 type MarketWatchInfoDTO struct {

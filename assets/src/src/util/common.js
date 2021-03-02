@@ -116,3 +116,16 @@ export const getGrossIncomeMarginDangerLevel = (amount) => {
 
   return '';
 }
+
+export const humanizeMoney = (amount) => {
+  if (amount > 1000000000000) {
+    return `${(amount / 1000000000000).toFixed(2)}T`;
+  }
+  if (amount > 1000000000) {
+    return `${(amount / 10000000000).toFixed(2)}B`;
+  }
+  if (amount > 1000000) {
+    return `${(amount / 1000000).toFixed(2)}M`;
+  }
+  return amount;
+}

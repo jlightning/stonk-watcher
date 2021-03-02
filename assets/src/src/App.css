@@ -1,6 +1,6 @@
 .App {
   text-align: center;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .App-logo {
@@ -46,6 +46,14 @@
 .App .App-container {
   max-width: 95%;
   margin-top: 1rem;
+}
+
+button.no-style {
+  border: none;
+}
+
+.fairprice-edit-modal .modal-dialog {
+  max-width: 800px;
 }
 
 @keyframes App-logo-spin {

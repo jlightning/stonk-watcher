@@ -85,6 +85,7 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 		{dest: &stockInfo.EPSNextYear, title: "EPS next Y", parser: util.ParsePercentage},
 		{dest: &stockInfo.EPSNext5Years, title: "EPS next 5Y", parser: util.ParsePercentage},
 		{dest: &stockInfo.EPSTTM, title: "EPS (ttm)", parser: util.ParseMoney},
+		{dest: &stockInfo.ShareOutstanding, title: "Shs Outstand", parser: util.ParseMoney},
 	}
 
 	for _, pair := range floatPairs {
