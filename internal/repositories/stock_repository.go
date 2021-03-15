@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
+	"regexp"
 	"stonk-watcher/internal/entities"
 	"strings"
 	"time"
@@ -14,12 +13,10 @@ import (
 	"github.com/google/uuid"
 )
 
-const dataPath = "./data/"
-
 func GetStockInfo(ticker string) (*entities.StockInfoDTO, error) {
 	ticker = strings.ToLower(ticker)
 	key := fmt.Sprintf("stock-info-%s.json", ticker)
-	bytes, err := readFile(dataPath + key)
+	bytes, err := readFile(key)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +64,7 @@ func PersistStockInfo(ticker string, dto *entities.StockInfoDTO) error {
 		return err
 	}
 
-	return writeFile(dataPath+key, bytes, 0600)
+	return writeFile(key, bytes, 0600)
 }
 
 func getStockInfoVersion() (string, error) {
@@ -88,17 +85,5 @@ func getStockInfoVersion() (string, error) {
 }
 
 func TruncateStockInfo() error {
-	files, err := filepath.Glob(dataPath + "stock-info-*.json")
-	if err != nil {
-		return err
-	}
-
-	for _, f := range files {
-		fmt.Println(f)
-		err := os.Remove(f)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return truncateData(regexp.MustCompile("^stock-info-.*\\.json$"))
 }

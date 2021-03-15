@@ -9,7 +9,7 @@ import (
 
 func GetWatchlist() ([]string, error) {
 	key := "watchlist.json"
-	bytes, err := readFile(dataPath + key)
+	bytes, err := readFile(key)
 	if err != nil {
 		return nil, err
 	}
@@ -37,5 +37,5 @@ func PersistWatchlist(watchlist []string) error {
 		return err
 	}
 
-	return writeFile(dataPath+key, bytes, 0600)
+	return writeFile(key, bytes, 0600)
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"log"
-	"os"
 	"stonk-watcher/internal/handlers"
 	"time"
 
@@ -15,11 +14,6 @@ import (
 var staticFileFS embed.FS
 
 func main() {
-	err := os.Mkdir("data", 0600)
-	if err != nil && !os.IsExist(err) {
-		log.Fatal(err)
-	}
-
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -36,7 +30,7 @@ func main() {
 	router.POST("/watchlist", handlers.UpdateWatchlistHandler)
 	router.GET("/", handlers.StaticHandler(staticFileFS))
 	router.GET("/static/*file", handlers.StaticHandler(staticFileFS))
-	err = router.Run()
+	err := router.Run()
 	if err != nil {
 		log.Fatal(err)
 	}

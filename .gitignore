@@ -30,7 +30,7 @@ Temporary Items
 .idea
 *.tmp.*
 .~lock.*
-data
+data.json
 bin
 tmp
 
