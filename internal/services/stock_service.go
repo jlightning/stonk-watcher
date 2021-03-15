@@ -3,12 +3,26 @@ package services
 import (
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/repositories"
+	"stonk-watcher/internal/util"
 	"strings"
 
 	"github.com/sirupsen/logrus"
 )
 
+var stockInformation = util.NewProcessingQueue(5)
+
 func GetStockInformation(ticker string) (*entities.StockInfoDTO, error) {
+	result, err := stockInformation.Trigger(func() (interface{}, error) {
+		return getStockInformation(ticker)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*entities.StockInfoDTO), nil
+}
+
+func getStockInformation(ticker string) (*entities.StockInfoDTO, error) {
 	stockInfo, err := repositories.GetStockInfo(ticker)
 	if err != nil {
 		logrus.WithError(err).Warnf("error while getting data from repository for ticker: %s", ticker)
