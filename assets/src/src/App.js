@@ -16,7 +16,7 @@ import {ColorBox} from "./component/colorbox";
 import {FairPriceCalculator} from "./component/fairprice-calculator";
 import {FaEdit} from "react-icons/all";
 
-const SERVER_URL = 'http://localhost:8080/'
+const SERVER_URL = '/'
 
 function App() {
   const [tickers, setTickers] = useState([]);

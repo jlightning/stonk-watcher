@@ -29,6 +29,7 @@ Temporary Items
 .apdisk
 .idea
 *.tmp.*
+*.tmp
 .~lock.*
 data.json
 bin
