@@ -78,7 +78,7 @@ export const FairPriceCalculator = ({tickerInfo}) => {
           </InputGroup>
           <InputGroup size="sm" className="mb-3">
             <InputGroup.Prepend>
-              <InputGroup.Text id="inputGroup-sizing-sm">Cash Flow (In Percentage)</InputGroup.Text>
+              <InputGroup.Text id="inputGroup-sizing-sm">Est. Cash Flow Growth (In Percentage)</InputGroup.Text>
             </InputGroup.Prepend>
             <FormControl aria-label="Small" aria-describedby="inputGroup-sizing-sm" value={currentCashFlowGrowth}
                          onChange={e => setCurrentCashFlowGrowth(parseFloat(e.target.value))}/>
