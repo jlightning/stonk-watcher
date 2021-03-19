@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/tidwall/pretty"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/gocolly/colly"
@@ -38,6 +40,37 @@ type morningStarFairPriceDTO struct {
 	} `json:"chart"`
 }
 
+type morningStarFinancialDataRowDTO struct {
+	Label    string                          `json:"label"`
+	Datum    []*float64                      `json:"datum"`
+	SubLevel morningStarFinancialDataRowsDTO `json:"subLevel"`
+}
+
+type morningStarFinancialDataRowsDTO []*morningStarFinancialDataRowDTO
+
+type morningStarFinancialDataDTO struct {
+	Columns []string                        `json:"columnDefs"`
+	Rows    morningStarFinancialDataRowsDTO `json:"rows"`
+}
+
+func (d morningStarFinancialDataRowsDTO) Find(label []string) (morningStarFinancialDataRowDTO, bool) {
+	if len(label) == 0 {
+		return morningStarFinancialDataRowDTO{}, false
+	}
+	for idx := range d {
+		row := d[idx]
+		if row.Label == label[0] {
+			if len(label) == 1 {
+				return *row, true
+			} else {
+				return row.SubLevel.Find(label[1:])
+			}
+		}
+	}
+
+	return morningStarFinancialDataRowDTO{}, false
+}
+
 func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO, error) {
 	stockMSID, url, err := getMorningstarStockID(ticker, nil)
 	if err != nil {
@@ -59,6 +92,11 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 	}
 
 	fairPriceDTO, err := getMorningstarFairPrice(stockMSID, headerData)
+	if err != nil {
+		return nil, err
+	}
+
+	err = getMorningStarFinancialData(stockMSID, headerData)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +145,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 
 func getMorningstarPerformance(stockMSID string, headerData map[string]string) (*morningStarPerformanceResponseDTO, error) {
 	c := colly.NewCollector()
-	apiUrl := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/operatingPerformance/v2/%s", stockMSID)
+	apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/operatingPerformance/v2/%s", stockMSID)
 
 	var responseDTO morningStarPerformanceResponseDTO
 
@@ -123,7 +161,7 @@ func getMorningstarPerformance(stockMSID string, headerData map[string]string) (
 		}
 	})
 
-	err := c.Visit(apiUrl)
+	err := c.Visit(apiURL)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +171,7 @@ func getMorningstarPerformance(stockMSID string, headerData map[string]string) (
 
 func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*morningStarFairPriceDTO, error) {
 	c := colly.NewCollector()
-	apiUrl := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/priceFairValue/v2/%s/data?secExchangeList=&languageId=en&locale=en&clientId=MDC&benchmarkId=category&component=sal-components-price-fairvalue&version=3.41.0", stockMSID)
+	apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/priceFairValue/v2/%s/data?secExchangeList=&languageId=en&locale=en&clientId=MDC&benchmarkId=category&component=sal-components-price-fairvalue&version=3.41.0", stockMSID)
 
 	var responseDTO morningStarFairPriceDTO
 
@@ -149,12 +187,65 @@ func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*m
 		}
 	})
 
-	err := c.Visit(apiUrl)
+	err := c.Visit(apiURL)
 	if err != nil {
 		return nil, err
 	}
 
 	return &responseDTO, nil
+}
+
+func getMorningStarFinancialData(stockMSID string, headerData map[string]string) error {
+	sub := func(stmType string, responseDTO *morningStarFinancialDataDTO) error {
+		c := colly.NewCollector()
+		apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/newfinancials/%s/%s/detail?dataType=A&reportType=A&locale=en&clientId=MDC&benchmarkId=category&version=3.41.0", stockMSID, stmType)
+
+		c.OnRequest(func(request *colly.Request) {
+			for k, v := range headerData {
+				request.Headers.Add(k, v)
+			}
+		})
+		c.OnResponse(func(response *colly.Response) {
+			err := json.Unmarshal(response.Body, responseDTO)
+			if err != nil {
+				logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
+			}
+
+			fmt.Println(string(pretty.Color(pretty.PrettyOptions(response.Body, &pretty.Options{
+				Width:  180,
+				Prefix: "",
+				Indent: "  ",
+			}), nil)))
+		})
+
+		err := c.Visit(apiURL)
+		if err != nil {
+			return err
+		}
+
+		//fmt.Println(util.MustJSONStringify(responseDTO, true))
+
+		return nil
+	}
+
+	var incomeStmResp morningStarFinancialDataDTO
+
+	if err := sub("incomeStatement", &incomeStmResp); err != nil {
+		return err
+	}
+
+	dilutedEPS, _ := incomeStmResp.Rows.Find([]string{"WasoAndEpsData", "Diluted EPS"})
+	fmt.Println(util.MustJSONStringify(dilutedEPS, true))
+	fmt.Println(util.MustJSONStringify(incomeStmResp.Columns, true))
+
+	//if err := sub("balanceSheet"); err != nil {
+	//	return err
+	//}
+	//if err := sub("cashFlow"); err != nil {
+	//	return err
+	//}
+
+	return nil
 }
 
 func getMorningstarStockID(ticker string, prefix *string) (string, string, error) {
