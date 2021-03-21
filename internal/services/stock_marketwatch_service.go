@@ -79,7 +79,7 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 		sort.Sort(*pair.dest)
 
 		if pair.growthDest != nil {
-			*pair.growthDest = calculateGrowth(*pair.dest, []int{5, 3, 2})
+			*pair.growthDest = calculateGrowth(*pair.dest, []int{5, 3, 1})
 		}
 	}
 

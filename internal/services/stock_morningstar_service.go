@@ -313,6 +313,7 @@ func calculateGrowth(input []entities.YearAmount, periods []int) []entities.Year
 					Year:   periodFrom,
 					Amount: entities.NewPercentage(util.CalculateAnnualCompoundInterest(yearAmount.Amount.Get(), currentAmount.Amount.Get(), int(periodFrom.Year))),
 				})
+
 				break
 			}
 		}

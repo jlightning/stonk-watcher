@@ -9,5 +9,8 @@ func CalculateAnnualCompoundInterest(orig, current float64, duration int) float6
 	}
 
 	percentage := math.Abs((current - orig) / orig)
+	if duration == 1 {
+		return isNegative * percentage
+	}
 	return isNegative * (math.Pow(1+percentage, 1/float64(duration-1)) - 1)
 }
