@@ -61,11 +61,23 @@ type MarketWatchInfoDTO struct {
 	Url                        string         `json:"url"`
 }
 
+type MorningStarFinancialData struct {
+	Revenues        []YearAmount `json:"revenues"`
+	RevenueGrowths  []YearAmount `json:"revenue_growths"`
+	EPS             []YearAmount `json:"eps"`
+	EPSGrowths      []YearAmount `json:"eps_growths"`
+	Equities        []YearAmount `json:"equities"`
+	EquityGrowths   []YearAmount `json:"equity_growths"`
+	CashFlows       []YearAmount `json:"cash_flows"`
+	CashFlowGrowths []YearAmount `json:"cash_flow_growths"`
+}
+
 type MorningStarPerformanceDTO struct {
-	ROI10Years      Percentage `json:"roi_10_years"`
-	ROI5Years       Percentage `json:"roi_5_years"`
-	ROILastYears    Percentage `json:"roi_last_year"`
-	ROITTM          Percentage `json:"roittm"`
-	LatestFairPrice float64    `json:"latest_fair_price""`
-	Url             string     `json:"url"`
+	ROI10Years      Percentage               `json:"roi_10_years"`
+	ROI5Years       Percentage               `json:"roi_5_years"`
+	ROILastYears    Percentage               `json:"roi_last_year"`
+	ROITTM          Percentage               `json:"roittm"`
+	LatestFairPrice float64                  `json:"latest_fair_price"`
+	Url             string                   `json:"url"`
+	FinancialData   MorningStarFinancialData `json:"financial_data"`
 }

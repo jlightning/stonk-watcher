@@ -4,10 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 )
 
 type FloatSetter interface {
 	Set(float64)
+}
+
+type FloatGetter interface {
+	Get() float64
 }
 
 type ListFloatSetter interface {
@@ -25,6 +30,10 @@ func (m *Money) Set(i float64) {
 	*m = Money(i)
 }
 
+func (m Money) Get() float64 {
+	return float64(m)
+}
+
 func (m Money) IsNaN() bool {
 	return math.IsNaN(float64(m))
 }
@@ -34,6 +43,20 @@ func (m Money) MarshalJSON() ([]byte, error) {
 		return []byte("null"), nil
 	}
 	return []byte(fmt.Sprintf("%.2f", m)), nil
+}
+
+func (m *Money) UnmarshalJSON(bytes []byte) error {
+	if string(bytes) == "null" {
+		*m = Money(math.NaN())
+	} else {
+		f, err := strconv.ParseFloat(string(bytes), 64)
+		if err != nil {
+			return err
+		}
+
+		*m = Money(f)
+	}
+	return nil
 }
 
 func (lm *ListMoney) Set(list []float64) {
@@ -55,6 +78,10 @@ type ListPercentage []Percentage
 
 func (p *Percentage) Set(i float64) {
 	*p = Percentage(i)
+}
+
+func (p Percentage) Get() float64 {
+	return float64(p)
 }
 
 func (p Percentage) IsNaN() bool {

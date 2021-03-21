@@ -118,10 +118,10 @@ function App() {
                 </Container>
               </th>
               <th><Container><Row className={'row-th'}>ROIC (10 5 1)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Sales Growth (5 3 1)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>EPS Growth (5 3 1)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Equity Growth (5 3 1)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Cash Flow Growth (5 3 1)</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Sales Growth (10 5 2)</Row></Container></th>
+              <th><Container><Row className={'row-th'}>EPS Growth (10 5 2)</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Equity Growth (10 5 2)</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Cash Flow Growth (10 5 2)</Row></Container></th>
               <th>
                 <Container>
                   <Row className={'row-th'}>Dividend</Row>
@@ -173,26 +173,10 @@ function App() {
                     get(detail, 'morningstar_info.roi_5_years', '-'),
                     get(detail, 'morningstar_info.roi_last_year', '-'),
                   ];
-                  saleGrowths = [
-                    get(detail, `marketwatch_info.sales_growth_5_years`, '-'),
-                    get(detail, `marketwatch_info.sales_growth_3_years`, '-'),
-                    get(detail, `marketwatch_info.sales_growth_last_year`, '-'),
-                  ];
-                  epsGrowths = [
-                    get(detail, `marketwatch_info.eps_growth_5_years`, '-'),
-                    get(detail, `marketwatch_info.eps_growth_3_years`, '-'),
-                    get(detail, `marketwatch_info.eps_growth_last_year`, '-'),
-                  ];
-                  equityGrowths = [
-                    get(detail, `marketwatch_info.equity_growth_5_years`, '-'),
-                    get(detail, `marketwatch_info.equity_growth_3_years`, '-'),
-                    get(detail, `marketwatch_info.equity_growth_last_year`, '-'),
-                  ]
-                  cashFlowGrowths = [
-                    get(detail, `marketwatch_info.free_cash_flow_growth_5_years`, '-'),
-                    get(detail, `marketwatch_info.free_cash_flow_growth_3_years`, '-'),
-                    get(detail, `marketwatch_info.free_cash_flow_growth_last_year`, '-'),
-                  ]
+                  saleGrowths = get(detail, 'morningstar_info.financial_data.revenue_growths') || [];
+                  epsGrowths = get(detail, 'morningstar_info.financial_data.eps_growths') || [];
+                  equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || [];
+                  cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || [];
                 }
                 let price = get(prices, `['${t}'].price`);
                 price = price || get(details, `['${t}'].finviz_info.price`, '-');
@@ -250,7 +234,7 @@ function App() {
                             {saleGrowths.map(r => (
                               <Col>
                                 <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
                               </Col>
                             ))}
                           </Row>
@@ -262,7 +246,7 @@ function App() {
                             {epsGrowths.map(r => (
                               <Col>
                                 <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
                               </Col>
                             ))}
                           </Row>
@@ -274,7 +258,7 @@ function App() {
                             {equityGrowths.map(r => (
                               <Col>
                                 <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
                               </Col>
                             ))}
                           </Row>
@@ -286,7 +270,7 @@ function App() {
                             {cashFlowGrowths.map(r => (
                               <Col>
                                 <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
+                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
                               </Col>
                             ))}
                           </Row>

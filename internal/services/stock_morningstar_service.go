@@ -4,13 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"regexp"
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strconv"
 	"strings"
-
-	"github.com/tidwall/pretty"
 
 	"github.com/sirupsen/logrus"
 
@@ -51,9 +50,12 @@ type morningStarFinancialDataRowsDTO []*morningStarFinancialDataRowDTO
 type morningStarFinancialDataDTO struct {
 	Columns []string                        `json:"columnDefs"`
 	Rows    morningStarFinancialDataRowsDTO `json:"rows"`
+	Footer  struct {
+		OrderOfMagnitude string `json:"orderOfMagnitude"`
+	} `json:"footer"`
 }
 
-func (d morningStarFinancialDataRowsDTO) Find(label []string) (morningStarFinancialDataRowDTO, bool) {
+func (d morningStarFinancialDataRowsDTO) find(label []string) (morningStarFinancialDataRowDTO, bool) {
 	if len(label) == 0 {
 		return morningStarFinancialDataRowDTO{}, false
 	}
@@ -63,12 +65,25 @@ func (d morningStarFinancialDataRowsDTO) Find(label []string) (morningStarFinanc
 			if len(label) == 1 {
 				return *row, true
 			} else {
-				return row.SubLevel.Find(label[1:])
+				return row.SubLevel.find(label[1:])
 			}
 		}
 	}
 
 	return morningStarFinancialDataRowDTO{}, false
+}
+
+func (d morningStarFinancialDataDTO) getMoney(amount float64) entities.Money {
+	if strings.ToLower(d.Footer.OrderOfMagnitude) == "billion" {
+		return entities.Money(amount * 1000000000)
+	}
+	if strings.ToLower(d.Footer.OrderOfMagnitude) == "million" {
+		return entities.Money(amount * 1000000)
+	}
+	if strings.ToLower(d.Footer.OrderOfMagnitude) == "thousand" {
+		return entities.Money(amount * 1000)
+	}
+	return entities.Money(amount)
 }
 
 func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO, error) {
@@ -96,7 +111,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		return nil, err
 	}
 
-	err = getMorningStarFinancialData(stockMSID, headerData)
+	financialData, err := getMorningStarFinancialData(stockMSID, headerData)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +153,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		ROITTM:          entities.Percentage(roittm / 100),
 		LatestFairPrice: latestFairPrice,
 		Url:             url,
+		FinancialData:   *financialData,
 	}
 
 	return &response, nil
@@ -195,8 +211,8 @@ func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*m
 	return &responseDTO, nil
 }
 
-func getMorningStarFinancialData(stockMSID string, headerData map[string]string) error {
-	sub := func(stmType string, responseDTO *morningStarFinancialDataDTO) error {
+func getMorningStarFinancialData(stockMSID string, headerData map[string]string) (*entities.MorningStarFinancialData, error) {
+	getStmData := func(stmType string, responseDTO *morningStarFinancialDataDTO) error {
 		c := colly.NewCollector()
 		apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/newfinancials/%s/%s/detail?dataType=A&reportType=A&locale=en&clientId=MDC&benchmarkId=category&version=3.41.0", stockMSID, stmType)
 
@@ -211,11 +227,11 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 				logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 			}
 
-			fmt.Println(string(pretty.Color(pretty.PrettyOptions(response.Body, &pretty.Options{
-				Width:  180,
-				Prefix: "",
-				Indent: "  ",
-			}), nil)))
+			//ioutil.WriteFile(stmType+".tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+			//	Width:  180,
+			//	Prefix: "",
+			//	Indent: "  ",
+			//}), 0600)
 		})
 
 		err := c.Visit(apiURL)
@@ -223,29 +239,90 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 			return err
 		}
 
-		//fmt.Println(util.MustJSONStringify(responseDTO, true))
+		return nil
+	}
+
+	var res entities.MorningStarFinancialData
+	var incomeStmResp, balanceSheetStmResp, cashFlowStmResp morningStarFinancialDataDTO
+
+	if err := getStmData("incomeStatement", &incomeStmResp); err != nil {
+		return nil, err
+	}
+	if err := getStmData("balanceSheet", &balanceSheetStmResp); err != nil {
+		return nil, err
+	}
+	if err := getStmData("cashFlow", &cashFlowStmResp); err != nil {
+		return nil, err
+	}
+
+	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *[]entities.YearAmount, growthList *[]entities.YearAmount) error {
+		amounts, ok := stm.Rows.find(find)
+		if ok {
+			for idx, amount := range amounts.Datum {
+				year, err := entities.NewYear(stm.Columns[idx])
+				if err != nil {
+					return err
+				}
+
+				if amount != nil {
+					money := incomeStmResp.getMoney(*amount)
+					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
+				} else {
+					money := entities.Money(math.NaN())
+					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
+				}
+			}
+
+			*growthList = calculateGrowth(*amountList)
+		}
 
 		return nil
 	}
 
-	var incomeStmResp morningStarFinancialDataDTO
-
-	if err := sub("incomeStatement", &incomeStmResp); err != nil {
-		return err
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths); err != nil {
+		return nil, err
 	}
 
-	dilutedEPS, _ := incomeStmResp.Rows.Find([]string{"WasoAndEpsData", "Diluted EPS"})
-	fmt.Println(util.MustJSONStringify(dilutedEPS, true))
-	fmt.Println(util.MustJSONStringify(incomeStmResp.Columns, true))
+	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths); err != nil {
+		return nil, err
+	}
 
-	//if err := sub("balanceSheet"); err != nil {
-	//	return err
-	//}
-	//if err := sub("cashFlow"); err != nil {
-	//	return err
-	//}
+	if err := populateAmount(balanceSheetStmResp, []string{"BalanceSheet", "Total Equity"}, &res.Equities, &res.EquityGrowths); err != nil {
+		return nil, err
+	}
 
-	return nil
+	if err := populateAmount(cashFlowStmResp, []string{"CashFlow", "Cash and Cash Equivalents, End of Period"}, &res.CashFlows, &res.CashFlowGrowths); err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func calculateGrowth(input []entities.YearAmount) []entities.YearAmount {
+	var currentAmount entities.YearAmount
+	for i := len(input) - 1; i >= 0; i-- {
+		if !input[i].Amount.IsNaN() {
+			currentAmount = input[i]
+			break
+		}
+	}
+
+	var res []entities.YearAmount
+	for _, period := range []int{10, 5, 2} {
+		for _, yearAmount := range input {
+			periodFrom := currentAmount.Year.PeriodFrom(yearAmount.Year)
+			if !yearAmount.Amount.IsNaN() && int(periodFrom.Year) <= period {
+				percentage := entities.Percentage(util.CalculateAnnualCompoundInterest(yearAmount.Amount.Get(), currentAmount.Amount.Get(), int(periodFrom.Year)))
+				res = append(res, entities.YearAmount{
+					Year:   periodFrom,
+					Amount: &percentage,
+				})
+				break
+			}
+		}
+	}
+
+	return res
 }
 
 func getMorningstarStockID(ticker string, prefix *string) (string, string, error) {
