@@ -121,7 +121,7 @@ export const humanizeMoney = (amount) => {
     return `${(amount / 1000000000000).toFixed(2)}T`;
   }
   if (Math.abs(amount) > 1000000000) {
-    return `${(amount / 10000000000).toFixed(2)}B`;
+    return `${(amount / 1000000000).toFixed(2)}B`;
   }
   if (Math.abs(amount) > 1000000) {
     return `${(amount / 1000000).toFixed(2)}M`;

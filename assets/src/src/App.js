@@ -27,6 +27,7 @@ import {
 import {ColorBox} from "./component/colorbox";
 import {FairPriceCalculator} from "./component/fairprice-calculator";
 import {FaEdit} from "react-icons/all";
+import {CanvasJSChart} from "canvasjs-react-charts";
 
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || '/';
 
@@ -87,9 +88,9 @@ function App() {
     setShow(true);
   }
 
-  const renderTooltip = (props, data, isPercentage = false) => (
+  const renderTooltip = (props, data, title, isPercentage = false) => (
     <Popover id="button-tooltip" {...props}>
-      <Popover.Title>Data</Popover.Title>
+      <Popover.Title>{title}</Popover.Title>
       <Popover.Content>
         <Table striped bordered hover>
           <tr>
@@ -134,8 +135,27 @@ function App() {
               </>
             )
           }
-
         </Table>
+        <CanvasJSChart options={{
+          theme: "light2", // "light1", "dark1", "dark2"
+          axisY: {
+            title: title,
+            suffix: isPercentage ? '%' : '$',
+          },
+          axisX: {
+            title: "Year",
+            prefix: "Y",
+            interval: 2
+          },
+          data: [{
+            type: "line",
+            toolTipContent: "Week {x}: {y}%",
+            dataPoints: data.map((item, idx) => ({
+              x: item.year.year,
+              y: isPercentage ? item.amount.amount * 100 : item.amount,
+            }))
+          }]
+        }}/>
       </Popover.Content>
     </Popover>
   );
@@ -282,7 +302,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, grossIncomeMargins, true)}>
+                                        overlay={props => renderTooltip(props, grossIncomeMargins, 'Gross Income Margin', true)}>
                           <Container className={'can-hover'}>
                             <Row>
                               {takeRight(grossIncomeMargins, 1).map(r => (
@@ -297,7 +317,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, rois, true)}>
+                                        overlay={props => renderTooltip(props, rois, 'ROI', true)}>
                           <Container className={'can-hover'}>
                             <Row>
                               {roiGrowths.map(r => (
@@ -312,7 +332,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, sales)}>
+                                        overlay={props => renderTooltip(props, sales, 'Revenue')}>
                           <Container className={'can-hover'}>
                             <Row>
                               {saleGrowths.map(r => (
@@ -327,7 +347,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, eps)}>
+                                        overlay={props => renderTooltip(props, eps, 'EPS')}>
                           <Container className={'can-hover'}>
                             <Row>
                               {epsGrowths.map(r => (
@@ -342,7 +362,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, equities)}>
+                                        overlay={props => renderTooltip(props, equities, 'Equity')}>
                           <Container className={'can-hover'}>
                             <Row>
                               {equityGrowths.map(r => (
@@ -357,7 +377,7 @@ function App() {
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
-                                        overlay={props => renderTooltip(props, cashFlows)}>
+                                        overlay={props => renderTooltip(props, cashFlows, 'Cash Flow')}>
                           <Container className={'can-hover'}>
                             <Row>
                               {cashFlowGrowths.map(r => (
