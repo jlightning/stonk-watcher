@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"sort"
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strconv"
@@ -80,43 +81,16 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 
 			if !sale.IsNaN() && !grossIncome.IsNaN() {
 				amount := grossIncome / sale
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.Percentage(amount))
+				percentage := entities.Percentage(amount)
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.YearAmount{Year: entities.Year{Year: uint(years[i])}, Amount: &percentage})
 			} else {
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.Percentage(math.NaN()))
+				percentage := entities.Percentage(math.NaN())
+				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.YearAmount{Year: entities.Year{Year: uint(years[i])}, Amount: &percentage})
 			}
 		}
 	}
 
-	compoundInterestPairs2 := []struct {
-		dest     entities.FloatSetter
-		source   entities.ListFloatGetter
-		duration int
-	}{
-		{dest: &stockInfo.SalesGrowth5Years, source: stockInfo.Sales, duration: 5},
-		{dest: &stockInfo.SalesGrowth3Years, source: stockInfo.Sales, duration: 3},
-		{dest: &stockInfo.SalesGrowthLastYear, source: stockInfo.Sales, duration: 2},
-		{dest: &stockInfo.EPSGrowth5Years, source: stockInfo.EPS, duration: 5},
-		{dest: &stockInfo.EPSGrowth3Years, source: stockInfo.EPS, duration: 3},
-		{dest: &stockInfo.EPSGrowthLastYear, source: stockInfo.EPS, duration: 2},
-		{dest: &stockInfo.EquityGrowth5Years, source: stockInfo.Equity, duration: 5},
-		{dest: &stockInfo.EquityGrowth3Years, source: stockInfo.Equity, duration: 3},
-		{dest: &stockInfo.EquityGrowthLastYear, source: stockInfo.Equity, duration: 2},
-		{dest: &stockInfo.FreeCashFlowGrowth5Years, source: stockInfo.FreeCashFlow, duration: 5},
-		{dest: &stockInfo.FreeCashFlowGrowth3Years, source: stockInfo.FreeCashFlow, duration: 3},
-		{dest: &stockInfo.FreeCashFlowGrowthLastYear, source: stockInfo.FreeCashFlow, duration: 2},
-	}
-
-	for _, pair := range compoundInterestPairs2 {
-		source := pair.source.GetListFloat()
-
-		if len(source)-pair.duration < 0 {
-			continue
-		}
-
-		if !math.IsNaN(source[len(source)-pair.duration]) && !math.IsNaN(source[len(source)-1]) {
-			pair.dest.Set(util.CalculateAnnualCompoundInterest(source[len(source)-pair.duration], source[len(source)-1], pair.duration))
-		}
-	}
+	sort.Sort(stockInfo.GrossIncomeMargin)
 
 	return &stockInfo, nil
 }

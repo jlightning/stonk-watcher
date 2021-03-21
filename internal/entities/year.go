@@ -76,3 +76,17 @@ end:
 func NewYearAmount(year Year, amount Amount) YearAmount {
 	return YearAmount{Year: year, Amount: amount}
 }
+
+type ListYearAmount []YearAmount
+
+func (x ListYearAmount) Len() int {
+	return len(x)
+}
+
+func (x ListYearAmount) Less(i, j int) bool {
+	return x[i].Year.Year < x[j].Year.Year
+}
+
+func (x ListYearAmount) Swap(i, j int) {
+	x[i], x[j] = x[j], x[i]
+}

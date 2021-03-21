@@ -29,52 +29,40 @@ type FinvizStockInfoDTO struct {
 }
 
 type MarketWatchInfoDTO struct {
-	Years                      []int          `json:"years"`
-	Sales                      ListMoney      `json:"sales"`
-	SalesGrowth                ListPercentage `json:"sales_growth"`
-	SalesGrowth5Years          Percentage     `json:"sales_growth_5_years"`
-	SalesGrowth3Years          Percentage     `json:"sales_growth_3_years"`
-	SalesGrowthLastYear        Percentage     `json:"sales_growth_last_year"`
-	GrossIncome                ListMoney      `json:"gross_income"`
-	GrossIncomeMargin          ListPercentage `json:"gross_income_margin"`
-	PretaxIncome               ListMoney      `json:"pretax_income"`
-	NetIncome                  ListMoney      `json:"net_income"`
-	EPS                        ListMoney      `json:"eps"`
-	EPSGrowth                  ListPercentage `json:"eps_growth"`
-	EPSGrowth5Years            Percentage     `json:"eps_growth_5_years"`
-	EPSGrowth3Years            Percentage     `json:"eps_growth_3_years"`
-	EPSGrowthLastYear          Percentage     `json:"eps_growth_last_year"`
-	TotalAssets                ListMoney      `json:"total_assets"`
-	TotalAssetsGrowth          ListPercentage `json:"total_assets_growth"`
-	ShortTermDebt              ListMoney      `json:"short_term_debt"`
-	LongTermDebt               ListMoney      `json:"long_term_debt"`
-	TotalLiabilities           ListMoney      `json:"total_liabilities"`
-	Equity                     ListMoney      `json:"equity"`
-	EquityGrowth5Years         Percentage     `json:"equity_growth_5_years"`
-	EquityGrowth3Years         Percentage     `json:"equity_growth_3_years"`
-	EquityGrowthLastYear       Percentage     `json:"equity_growth_last_year"`
-	FreeCashFlow               ListMoney      `json:"free_cash_flow"`
-	FreeCashFlowGrowth         ListPercentage `json:"free_cash_flow_growth"`
-	FreeCashFlowGrowth5Years   Percentage     `json:"free_cash_flow_growth_5_years"`
-	FreeCashFlowGrowth3Years   Percentage     `json:"free_cash_flow_growth_3_years"`
-	FreeCashFlowGrowthLastYear Percentage     `json:"free_cash_flow_growth_last_year"`
-	Url                        string         `json:"url"`
+	Years              []int          `json:"years"`
+	Sales              ListMoney      `json:"sales"`
+	SalesGrowth        ListPercentage `json:"sales_growth"`
+	GrossIncome        ListMoney      `json:"gross_income"`
+	GrossIncomeMargin  ListYearAmount `json:"gross_income_margin"`
+	PretaxIncome       ListMoney      `json:"pretax_income"`
+	NetIncome          ListMoney      `json:"net_income"`
+	EPS                ListMoney      `json:"eps"`
+	EPSGrowth          ListPercentage `json:"eps_growth"`
+	TotalAssets        ListMoney      `json:"total_assets"`
+	TotalAssetsGrowth  ListPercentage `json:"total_assets_growth"`
+	ShortTermDebt      ListMoney      `json:"short_term_debt"`
+	LongTermDebt       ListMoney      `json:"long_term_debt"`
+	TotalLiabilities   ListMoney      `json:"total_liabilities"`
+	Equity             ListMoney      `json:"equity"`
+	FreeCashFlow       ListMoney      `json:"free_cash_flow"`
+	FreeCashFlowGrowth ListPercentage `json:"free_cash_flow_growth"`
+	Url                string         `json:"url"`
 }
 
 type MorningStarFinancialData struct {
-	Revenues        []YearAmount `json:"revenues"`
-	RevenueGrowths  []YearAmount `json:"revenue_growths"`
-	EPS             []YearAmount `json:"eps"`
-	EPSGrowths      []YearAmount `json:"eps_growths"`
-	Equities        []YearAmount `json:"equities"`
-	EquityGrowths   []YearAmount `json:"equity_growths"`
-	CashFlows       []YearAmount `json:"cash_flows"`
-	CashFlowGrowths []YearAmount `json:"cash_flow_growths"`
+	Revenues        ListYearAmount `json:"revenues"`
+	RevenueGrowths  ListYearAmount `json:"revenue_growths"`
+	EPS             ListYearAmount `json:"eps"`
+	EPSGrowths      ListYearAmount `json:"eps_growths"`
+	Equities        ListYearAmount `json:"equities"`
+	EquityGrowths   ListYearAmount `json:"equity_growths"`
+	CashFlows       ListYearAmount `json:"cash_flows"`
+	CashFlowGrowths ListYearAmount `json:"cash_flow_growths"`
 }
 
 type MorningStarPerformanceDTO struct {
-	ROIs            []YearAmount             `json:"rois"`
-	ROIGrowths      []YearAmount             `json:"roi_growths"`
+	ROIs            ListYearAmount           `json:"rois"`
+	ROIGrowths      ListYearAmount           `json:"roi_growths"`
 	LatestFairPrice float64                  `json:"latest_fair_price"`
 	Url             string                   `json:"url"`
 	FinancialData   MorningStarFinancialData `json:"financial_data"`

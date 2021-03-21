@@ -250,7 +250,7 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 		return nil, err
 	}
 
-	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *[]entities.YearAmount, growthList *[]entities.YearAmount, parseByOrderOfMagnitude bool) error {
+	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *entities.ListYearAmount, growthList *entities.ListYearAmount, parseByOrderOfMagnitude bool) error {
 		amounts, ok := stm.Rows.find(find)
 		if ok {
 			for idx, amount := range amounts.Datum {

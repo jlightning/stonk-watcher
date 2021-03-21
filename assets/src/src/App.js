@@ -181,7 +181,7 @@ function App() {
               <th>
                 <Container>
                   <Row className={'row-th'}>Gross Income</Row>
-                  <Row className={'row-th'}>Margin (3 2 1)</Row>
+                  <Row className={'row-th'}>Margin (Current)</Row>
                 </Container>
               </th>
               <th><Container><Row className={'row-th'}>ROIC (10 5 1)</Row></Container></th>
@@ -278,16 +278,19 @@ function App() {
                         {get(details, `['${t}'].finviz_info.pb.amount`, '-')}
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {takeRight(grossIncomeMargins, 3).map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getGrossIncomeMarginDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, grossIncomeMargins, true)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {takeRight(grossIncomeMargins, 1).map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getGrossIncomeMarginDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
