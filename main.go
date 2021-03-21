@@ -35,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//_, err := services.GetDataFromMorningstar("VMW")
+	//_, err := services.GetDataFromMarketWatch("VMW")
 	//if err != nil {
 	//	panic(err)
 	//}

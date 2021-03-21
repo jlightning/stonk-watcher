@@ -26,6 +26,11 @@ type ListFloatGetter interface {
 type Money float64
 type ListMoney []Money
 
+func NewMoney(i float64) *Money {
+	m := Money(i)
+	return &m
+}
+
 func (m *Money) Set(i float64) {
 	*m = Money(i)
 }
@@ -75,6 +80,11 @@ func (lm ListMoney) GetListFloat() (r []float64) {
 
 type Percentage float64
 type ListPercentage []Percentage
+
+func NewPercentage(i float64) *Percentage {
+	p := Percentage(i)
+	return &p
+}
 
 func (p *Percentage) Set(i float64) {
 	*p = Percentage(i)

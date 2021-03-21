@@ -44,26 +44,23 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 	stockInfo.Years = years
 
 	floatPairs := []struct {
-		dest   entities.ListFloatSetter
-		title  string
-		source map[string][]string
-		parser func([]string) ([]float64, error)
+		dest       *entities.ListYearAmount
+		growthDest *entities.ListYearAmount
+		title      string
+		source     map[string][]string
+		parser     func([]string) ([]float64, error)
 	}{
-		{dest: &stockInfo.Sales, title: "Sales/Revenue", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.SalesGrowth, title: "Sales Growth", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.Sales, growthDest: &stockInfo.SalesGrowth, title: "Sales/Revenue", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.GrossIncome, title: "Gross Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.PretaxIncome, title: "Pretax Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.NetIncome, title: "Net Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.EPS, title: "EPS (Diluted)", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.EPSGrowth, title: "EPS (Diluted) Growth", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.EPS, growthDest: &stockInfo.EPSGrowths, title: "EPS (Diluted)", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.TotalAssets, title: "Total Assets", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.TotalAssetsGrowth, title: "Total Assets Growth", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
 		{dest: &stockInfo.ShortTermDebt, title: "Short Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.LongTermDebt, title: "Long-Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.TotalLiabilities, title: "Total Liabilities", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.Equity, title: "Total Shareholders' Equity", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.FreeCashFlow, title: "Free Cash Flow", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParseMoney)},
-		{dest: &stockInfo.FreeCashFlowGrowth, title: "Free Cash Flow Growth", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParsePercentage)},
+		{dest: &stockInfo.Equities, growthDest: &stockInfo.EquityGrowths, title: "Total Shareholders' Equity", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.FreeCashFlow, growthDest: &stockInfo.FreeCashFlowGrowths, title: "Free Cash Flow", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 	}
 
 	for _, pair := range floatPairs {
@@ -72,15 +69,26 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 			return nil, err
 		}
 
-		pair.dest.Set(value)
+		for i, v := range value {
+			*pair.dest = append(*pair.dest, entities.YearAmount{
+				Year:   entities.Year{Year: uint(years[i])},
+				Amount: entities.NewMoney(v),
+			})
+		}
+
+		sort.Sort(*pair.dest)
+
+		if pair.growthDest != nil {
+			*pair.growthDest = calculateGrowth(*pair.dest, []int{5, 3, 2})
+		}
 	}
 
 	for i, sale := range stockInfo.Sales {
 		if len(stockInfo.GrossIncome) > i {
 			grossIncome := stockInfo.GrossIncome[i]
 
-			if !sale.IsNaN() && !grossIncome.IsNaN() {
-				amount := grossIncome / sale
+			if !sale.Amount.IsNaN() && !grossIncome.Amount.IsNaN() {
+				amount := grossIncome.Amount.Get() / sale.Amount.Get()
 				percentage := entities.Percentage(amount)
 				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.YearAmount{Year: entities.Year{Year: uint(years[i])}, Amount: &percentage})
 			} else {

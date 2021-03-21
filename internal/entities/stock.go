@@ -29,24 +29,24 @@ type FinvizStockInfoDTO struct {
 }
 
 type MarketWatchInfoDTO struct {
-	Years              []int          `json:"years"`
-	Sales              ListMoney      `json:"sales"`
-	SalesGrowth        ListPercentage `json:"sales_growth"`
-	GrossIncome        ListMoney      `json:"gross_income"`
-	GrossIncomeMargin  ListYearAmount `json:"gross_income_margin"`
-	PretaxIncome       ListMoney      `json:"pretax_income"`
-	NetIncome          ListMoney      `json:"net_income"`
-	EPS                ListMoney      `json:"eps"`
-	EPSGrowth          ListPercentage `json:"eps_growth"`
-	TotalAssets        ListMoney      `json:"total_assets"`
-	TotalAssetsGrowth  ListPercentage `json:"total_assets_growth"`
-	ShortTermDebt      ListMoney      `json:"short_term_debt"`
-	LongTermDebt       ListMoney      `json:"long_term_debt"`
-	TotalLiabilities   ListMoney      `json:"total_liabilities"`
-	Equity             ListMoney      `json:"equity"`
-	FreeCashFlow       ListMoney      `json:"free_cash_flow"`
-	FreeCashFlowGrowth ListPercentage `json:"free_cash_flow_growth"`
-	Url                string         `json:"url"`
+	Years               []int          `json:"years"`
+	Sales               ListYearAmount `json:"sales"`
+	SalesGrowth         ListYearAmount `json:"sales_growth"`
+	GrossIncome         ListYearAmount `json:"gross_income"`
+	GrossIncomeMargin   ListYearAmount `json:"gross_income_margin"`
+	PretaxIncome        ListYearAmount `json:"pretax_income"`
+	NetIncome           ListYearAmount `json:"net_income"`
+	EPS                 ListYearAmount `json:"eps"`
+	EPSGrowths          ListYearAmount `json:"eps_growths"`
+	TotalAssets         ListYearAmount `json:"total_assets"`
+	ShortTermDebt       ListYearAmount `json:"short_term_debt"`
+	LongTermDebt        ListYearAmount `json:"long_term_debt"`
+	TotalLiabilities    ListYearAmount `json:"total_liabilities"`
+	Equities            ListYearAmount `json:"equities"`
+	EquityGrowths       ListYearAmount `json:"equity_growths"`
+	FreeCashFlow        ListYearAmount `json:"free_cash_flow"`
+	FreeCashFlowGrowths ListYearAmount `json:"free_cash_flow_growths"`
+	Url                 string         `json:"url"`
 }
 
 type MorningStarFinancialData struct {

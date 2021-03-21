@@ -242,14 +242,14 @@ function App() {
                   grossIncomeMargins = get(detail, 'marketwatch_info.gross_income_margin');
                   rois = sales = get(detail, 'morningstar_info.rois') || [];
                   roiGrowths = sales = get(detail, 'morningstar_info.roi_growths') || [];
-                  sales = get(detail, 'morningstar_info.financial_data.revenues') || [];
-                  saleGrowths = get(detail, 'morningstar_info.financial_data.revenue_growths') || [];
-                  eps = get(detail, 'morningstar_info.financial_data.eps') || [];
-                  epsGrowths = get(detail, 'morningstar_info.financial_data.eps_growths') || [];
-                  equities = get(detail, 'morningstar_info.financial_data.equities') || [];
-                  equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || [];
-                  cashFlows = get(detail, 'morningstar_info.financial_data.cash_flows') || [];
-                  cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || [];
+                  sales = get(detail, 'morningstar_info.financial_data.revenues') || get(detail, 'marketwatch_info.sales') || [];
+                  saleGrowths = get(detail, 'morningstar_info.financial_data.revenue_growths') || get(detail, 'marketwatch_info.sales_growth') || [];
+                  eps = get(detail, 'morningstar_info.financial_data.eps') || get(detail, 'marketwatch_info.eps') || [];
+                  epsGrowths = get(detail, 'morningstar_info.financial_data.eps_growths') || get(detail, 'marketwatch_info.eps_growths') || [];
+                  equities = get(detail, 'morningstar_info.financial_data.equities') || get(detail, 'marketwatch_info.equities') || [];
+                  equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || get(detail, 'marketwatch_info.equity_growths') || [];
+                  cashFlows = get(detail, 'morningstar_info.financial_data.cash_flows') || get(detail, 'marketwatch_info.free_cash_flow') || [];
+                  cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || get(detail, 'marketwatch_info.free_cash_flow_growths') || [];
                 }
                 let price = get(prices, `['${t}'].price`);
                 price = price || get(details, `['${t}'].finviz_info.price`, '-');

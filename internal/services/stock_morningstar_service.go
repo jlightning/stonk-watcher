@@ -266,12 +266,11 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 					}
 					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
 				} else {
-					money := entities.Money(math.NaN())
-					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
+					*amountList = append(*amountList, entities.NewYearAmount(year, entities.NewMoney(math.NaN())))
 				}
 			}
 
-			*growthList = calculateGrowth(*amountList)
+			*growthList = calculateGrowth(*amountList, []int{10, 5, 2})
 		}
 
 		return nil
@@ -296,7 +295,7 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 	return &res, nil
 }
 
-func calculateGrowth(input []entities.YearAmount) []entities.YearAmount {
+func calculateGrowth(input []entities.YearAmount, periods []int) []entities.YearAmount {
 	var currentAmount entities.YearAmount
 	for i := len(input) - 1; i >= 0; i-- {
 		if !input[i].Amount.IsNaN() {
@@ -306,14 +305,13 @@ func calculateGrowth(input []entities.YearAmount) []entities.YearAmount {
 	}
 
 	var res []entities.YearAmount
-	for _, period := range []int{10, 5, 2} {
+	for _, period := range periods {
 		for _, yearAmount := range input {
 			periodFrom := currentAmount.Year.PeriodFrom(yearAmount.Year)
 			if !yearAmount.Amount.IsNaN() && int(periodFrom.Year) <= period {
-				percentage := entities.Percentage(util.CalculateAnnualCompoundInterest(yearAmount.Amount.Get(), currentAmount.Amount.Get(), int(periodFrom.Year)))
 				res = append(res, entities.YearAmount{
 					Year:   periodFrom,
-					Amount: &percentage,
+					Amount: entities.NewPercentage(util.CalculateAnnualCompoundInterest(yearAmount.Amount.Get(), currentAmount.Amount.Get(), int(periodFrom.Year))),
 				})
 				break
 			}
@@ -352,10 +350,9 @@ func calculateAverage(input []entities.YearAmount) []entities.YearAmount {
 
 	for _, p := range periods {
 		if pYearAmount, ok := YearAmountMap[p]; ok {
-			percent := entities.Percentage(pYearAmount.amount / float64(pYearAmount.count))
 			res = append(res, entities.YearAmount{
 				Year:   entities.NewYearPeriod(p),
-				Amount: &percent,
+				Amount: entities.NewPercentage(pYearAmount.amount / float64(pYearAmount.count)),
 			})
 		}
 	}
