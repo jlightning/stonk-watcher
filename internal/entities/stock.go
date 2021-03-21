@@ -73,10 +73,8 @@ type MorningStarFinancialData struct {
 }
 
 type MorningStarPerformanceDTO struct {
-	ROI10Years      Percentage               `json:"roi_10_years"`
-	ROI5Years       Percentage               `json:"roi_5_years"`
-	ROILastYears    Percentage               `json:"roi_last_year"`
-	ROITTM          Percentage               `json:"roittm"`
+	ROIs            []YearAmount             `json:"rois"`
+	ROIGrowths      []YearAmount             `json:"roi_growths"`
 	LatestFairPrice float64                  `json:"latest_fair_price"`
 	Url             string                   `json:"url"`
 	FinancialData   MorningStarFinancialData `json:"financial_data"`

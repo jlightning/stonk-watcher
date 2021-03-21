@@ -73,7 +73,6 @@ export const getPeDangerLevel = (amount) => {
   if (amount > 100) {
     return 'danger'
   }
-
   return ''
 }
 

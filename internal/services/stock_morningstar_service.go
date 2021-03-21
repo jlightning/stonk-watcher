@@ -10,6 +10,7 @@ import (
 	"stonk-watcher/internal/util"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -116,7 +117,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		return nil, err
 	}
 
-	var roi10, roi5, roi1, roittm float64
+	var rois []entities.YearAmount
 	for _, row := range performanceDTO.Reported.Collapsed.Rows {
 		if strings.Contains(strings.ToLower(row.Label), "invested capital") {
 			for idx, col := range performanceDTO.Reported.Columns {
@@ -125,32 +126,26 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 				if err != nil {
 					continue
 				}
-				if regexp.MustCompile("^[0-9]+$").MatchString(col) {
-					roi10 += roi
 
-					if idx > 4 {
-						roi5 += roi
+				if regexp.MustCompile("^[0-9]+$").MatchString(col) || strings.ToLower(col) == "ttm" {
+					year, err := entities.NewYear(col)
+					if err != nil {
+						return nil, err
 					}
-					if idx == 9 {
-						roi1 = roi
-					}
-				}
-				if strings.ToLower(col) == "ttm" {
-					roittm = roi
+					roiPercentage := entities.Percentage(roi / 100)
+					rois = append(rois, entities.YearAmount{
+						Year:   year,
+						Amount: &roiPercentage,
+					})
 				}
 			}
 		}
 	}
-	roi10 /= 10
-	roi5 /= 10
-
 	latestFairPrice, _ := util.ParseMoney(fairPriceDTO.Chart.ChartDatums.Recent.LatestFairValue)
 
 	response := entities.MorningStarPerformanceDTO{
-		ROI10Years:      entities.Percentage(roi10 / 100),
-		ROI5Years:       entities.Percentage(roi5 / 100),
-		ROILastYears:    entities.Percentage(roi1 / 100),
-		ROITTM:          entities.Percentage(roittm / 100),
+		ROIs:            rois,
+		ROIGrowths:      calculateAverage(rois),
 		LatestFairPrice: latestFairPrice,
 		Url:             url,
 		FinancialData:   *financialData,
@@ -322,6 +317,46 @@ func calculateGrowth(input []entities.YearAmount) []entities.YearAmount {
 				})
 				break
 			}
+		}
+	}
+
+	return res
+}
+
+func calculateAverage(input []entities.YearAmount) []entities.YearAmount {
+	periods := []int{10, 5, 1}
+	currentYear := entities.Year{Year: uint(time.Now().Year())}
+
+	type amountCount struct {
+		amount float64
+		count  int
+	}
+	YearAmountMap := make(map[int]amountCount, len(periods))
+
+	var res []entities.YearAmount
+	for _, yearAmount := range input {
+		if yearAmount.Year.IsTTM {
+			continue
+		}
+		periodFrom := currentYear.PeriodFrom(yearAmount.Year)
+		for _, p := range periods {
+			pYearAmount := YearAmountMap[p]
+			if int(periodFrom.Year) <= p {
+				pYearAmount.amount += yearAmount.Amount.Get()
+				pYearAmount.count++
+
+				YearAmountMap[p] = pYearAmount
+			}
+		}
+	}
+
+	for _, p := range periods {
+		if pYearAmount, ok := YearAmountMap[p]; ok {
+			percent := entities.Percentage(pYearAmount.amount / float64(pYearAmount.count))
+			res = append(res, entities.YearAmount{
+				Year:   entities.NewYearPeriod(p),
+				Amount: &percent,
+			})
 		}
 	}
 

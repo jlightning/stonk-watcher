@@ -87,7 +87,7 @@ function App() {
     setShow(true);
   }
 
-  const renderTooltip = (props, data) => (
+  const renderTooltip = (props, data, isPercentage = false) => (
     <Popover id="button-tooltip" {...props}>
       <Popover.Title>Data</Popover.Title>
       <Popover.Content>
@@ -98,27 +98,43 @@ function App() {
               <td>{get(item, 'year.year')}</td>
             ))}
           </tr>
-          <tr>
-            <td>Amount</td>
-            {data.map(item => (
-              <td>{humanizeMoney(get(item, 'amount'))}</td>
-            ))}
-          </tr>
-          <tr>
-            <td>Percentage</td>
-            {
-              data.map((item, idx) => {
-                if (idx === 0) {
-                  return <td>-</td>;
-                }
-                if (!data[idx - 1].amount) {
-                  return <td>-</td>;
-                }
-                const percentage = ((item.amount - data[idx - 1].amount) * 100 / Math.abs(data[idx - 1].amount)).toFixed(2 );
-                return <td>{percentage}%</td>;
-              })
-            }
-          </tr>
+          {
+            isPercentage ? (
+              <>
+                <tr>
+                  <td>Amount</td>
+                  {data.map(item => (
+                    <td>{get(item, 'amount.percent')}</td>
+                  ))}
+                </tr>
+              </>
+            ) : (
+              <>
+                <tr>
+                  <td>Amount</td>
+                  {data.map(item => (
+                    <td>{humanizeMoney(get(item, 'amount'))}</td>
+                  ))}
+                </tr>
+                <tr>
+                  <td>Percentage</td>
+                  {
+                    data.map((item, idx) => {
+                      if (idx === 0) {
+                        return <td>-</td>;
+                      }
+                      if (!data[idx - 1].amount) {
+                        return <td>-</td>;
+                      }
+                      const percentage = ((item.amount - data[idx - 1].amount) * 100 / Math.abs(data[idx - 1].amount)).toFixed(2);
+                      return <td>{percentage}%</td>;
+                    })
+                  }
+                </tr>
+              </>
+            )
+          }
+
         </Table>
       </Popover.Content>
     </Popover>
@@ -210,6 +226,7 @@ function App() {
             <tbody>
             {
               tickers.map(t => {
+                let rois = [];
                 let roiGrowths = [];
                 let sales = [];
                 let saleGrowths = [];
@@ -223,11 +240,8 @@ function App() {
                 const detail = get(details, `['${t}']`)
                 if (detail) {
                   grossIncomeMargins = get(detail, 'marketwatch_info.gross_income_margin');
-                  roiGrowths = [
-                    get(detail, 'morningstar_info.roi_10_years', '-'),
-                    get(detail, 'morningstar_info.roi_5_years', '-'),
-                    get(detail, 'morningstar_info.roi_last_year', '-'),
-                  ];
+                  rois = sales = get(detail, 'morningstar_info.rois') || [];
+                  roiGrowths = sales = get(detail, 'morningstar_info.roi_growths') || [];
                   sales = get(detail, 'morningstar_info.financial_data.revenues') || [];
                   saleGrowths = get(detail, 'morningstar_info.financial_data.revenue_growths') || [];
                   eps = get(detail, 'morningstar_info.financial_data.eps') || [];
@@ -276,16 +290,19 @@ function App() {
                         </Container>
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {roiGrowths.map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount'))}>{get(r, 'percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, rois, true)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {roiGrowths.map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
                         <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
