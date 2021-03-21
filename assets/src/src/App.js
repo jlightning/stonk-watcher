@@ -1,6 +1,17 @@
-import './App.css';
-import {Button, Col, Container, FormControl, InputGroup, Modal, Row, Table} from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Container,
+  FormControl,
+  InputGroup,
+  Modal,
+  OverlayTrigger,
+  Popover,
+  Row,
+  Table
+} from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 import {useEffect, useState} from "react";
 import {get, takeRight} from 'lodash';
 import {
@@ -10,7 +21,8 @@ import {
   getPeDangerLevel,
   getReturnColorDangerLevel,
   getRSIDangerLevel,
-  getShortFloatDangerLevel
+  getShortFloatDangerLevel,
+  humanizeMoney
 } from "./util/common";
 import {ColorBox} from "./component/colorbox";
 import {FairPriceCalculator} from "./component/fairprice-calculator";
@@ -40,7 +52,9 @@ function App() {
         setPrices(prevDate => ({...prevDate, [t]: res}));
       })
     }, 15000);
-    return () => {clearInterval(interval)}
+    return () => {
+      clearInterval(interval)
+    }
   });
 
   useEffect(() => {
@@ -72,6 +86,43 @@ function App() {
     setFairPriceTickerInfo(t);
     setShow(true);
   }
+
+  const renderTooltip = (props, data) => (
+    <Popover id="button-tooltip" {...props}>
+      <Popover.Title>Data</Popover.Title>
+      <Popover.Content>
+        <Table striped bordered hover>
+          <tr>
+            <td>Year</td>
+            {data.map(item => (
+              <td>{get(item, 'year.year')}</td>
+            ))}
+          </tr>
+          <tr>
+            <td>Amount</td>
+            {data.map(item => (
+              <td>{humanizeMoney(get(item, 'amount'))}</td>
+            ))}
+          </tr>
+          <tr>
+            <td>Percentage</td>
+            {
+              data.map((item, idx) => {
+                if (idx === 0) {
+                  return <td>-</td>;
+                }
+                if (!data[idx - 1].amount) {
+                  return <td>-</td>;
+                }
+                const percentage = ((item.amount - data[idx - 1].amount) * 100 / Math.abs(data[idx - 1].amount)).toFixed(2 );
+                return <td>{percentage}%</td>;
+              })
+            }
+          </tr>
+        </Table>
+      </Popover.Content>
+    </Popover>
+  );
 
   return (
     <div className="App">
@@ -160,9 +211,13 @@ function App() {
             {
               tickers.map(t => {
                 let roiGrowths = [];
+                let sales = [];
                 let saleGrowths = [];
                 let epsGrowths = [];
+                let eps = [];
+                let equities = [];
                 let equityGrowths = [];
+                let cashFlows = [];
                 let cashFlowGrowths = [];
                 let grossIncomeMargins = [];
                 const detail = get(details, `['${t}']`)
@@ -173,9 +228,13 @@ function App() {
                     get(detail, 'morningstar_info.roi_5_years', '-'),
                     get(detail, 'morningstar_info.roi_last_year', '-'),
                   ];
+                  sales = get(detail, 'morningstar_info.financial_data.revenues') || [];
                   saleGrowths = get(detail, 'morningstar_info.financial_data.revenue_growths') || [];
+                  eps = get(detail, 'morningstar_info.financial_data.eps') || [];
                   epsGrowths = get(detail, 'morningstar_info.financial_data.eps_growths') || [];
+                  equities = get(detail, 'morningstar_info.financial_data.equities') || [];
                   equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || [];
+                  cashFlows = get(detail, 'morningstar_info.financial_data.cash_flows') || [];
                   cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || [];
                 }
                 let price = get(prices, `['${t}'].price`);
@@ -229,52 +288,64 @@ function App() {
                         </Container>
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {saleGrowths.map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, sales)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {saleGrowths.map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {epsGrowths.map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, eps)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {epsGrowths.map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {equityGrowths.map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, equities)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {equityGrowths.map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
-                        <Container>
-                          <Row>
-                            {cashFlowGrowths.map(r => (
-                              <Col>
-                                <ColorBox
-                                  dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
-                              </Col>
-                            ))}
-                          </Row>
-                        </Container>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                                        overlay={props => renderTooltip(props, cashFlows)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {cashFlowGrowths.map(r => (
+                                <Col>
+                                  <ColorBox
+                                    dangerLevel={getReturnColorDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
+                                </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
                       </td>
                       <td>
                         {get(details, `['${t}'].finviz_info.dividend_yield.percent`, '-')}
@@ -309,7 +380,8 @@ function App() {
                         <Container>
                           <Row>
                             <Col>
-                              <button className={'no-style'} onClick={e => showMyFairPriceModal(detail)}><FaEdit/></button>
+                              <button className={'no-style'} onClick={e => showMyFairPriceModal(detail)}><FaEdit/>
+                              </button>
                             </Col>
                           </Row>
                         </Container>

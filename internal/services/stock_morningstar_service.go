@@ -255,7 +255,7 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 		return nil, err
 	}
 
-	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *[]entities.YearAmount, growthList *[]entities.YearAmount) error {
+	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *[]entities.YearAmount, growthList *[]entities.YearAmount, parseByOrderOfMagnitude bool) error {
 		amounts, ok := stm.Rows.find(find)
 		if ok {
 			for idx, amount := range amounts.Datum {
@@ -265,7 +265,10 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 				}
 
 				if amount != nil {
-					money := incomeStmResp.getMoney(*amount)
+					money := entities.Money(*amount)
+					if parseByOrderOfMagnitude {
+						money = incomeStmResp.getMoney(*amount)
+					}
 					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
 				} else {
 					money := entities.Money(math.NaN())
@@ -279,19 +282,19 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 		return nil
 	}
 
-	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths); err != nil {
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths, true); err != nil {
 		return nil, err
 	}
 
-	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths); err != nil {
+	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths, false); err != nil {
 		return nil, err
 	}
 
-	if err := populateAmount(balanceSheetStmResp, []string{"BalanceSheet", "Total Equity"}, &res.Equities, &res.EquityGrowths); err != nil {
+	if err := populateAmount(balanceSheetStmResp, []string{"BalanceSheet", "Total Equity"}, &res.Equities, &res.EquityGrowths, true); err != nil {
 		return nil, err
 	}
 
-	if err := populateAmount(cashFlowStmResp, []string{"CashFlow", "Cash and Cash Equivalents, End of Period"}, &res.CashFlows, &res.CashFlowGrowths); err != nil {
+	if err := populateAmount(cashFlowStmResp, []string{"CashFlow", "Cash and Cash Equivalents, End of Period"}, &res.CashFlows, &res.CashFlowGrowths, true); err != nil {
 		return nil, err
 	}
 
