@@ -225,7 +225,7 @@ function App() {
             </thead>
             <tbody>
             {
-              tickers.map(t => {
+              tickers.map((t, tIdx) => {
                 let rois = [];
                 let roiGrowths = [];
                 let sales = [];
@@ -257,6 +257,9 @@ function App() {
                 let msFairPrice = get(details, `['${t}'].morningstar_info.latest_fair_price`, '-');
                 let targetPriceDiscount = (targetPrice - price) * 100 / targetPrice;
                 let msFairPriceDiscount = (msFairPrice - price) * 100 / msFairPrice;
+
+                let tooltipPlacement = tIdx > tickers.length - 5 ? 'top' : 'bottom'
+
                 return (
                   <>
                     <tr>
@@ -278,7 +281,7 @@ function App() {
                         {get(details, `['${t}'].finviz_info.pb.amount`, '-')}
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, grossIncomeMargins, true)}>
                           <Container className={'can-hover'}>
                             <Row>
@@ -293,7 +296,7 @@ function App() {
                         </OverlayTrigger>
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, rois, true)}>
                           <Container className={'can-hover'}>
                             <Row>
@@ -308,7 +311,7 @@ function App() {
                         </OverlayTrigger>
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, sales)}>
                           <Container className={'can-hover'}>
                             <Row>
@@ -323,7 +326,7 @@ function App() {
                         </OverlayTrigger>
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, eps)}>
                           <Container className={'can-hover'}>
                             <Row>
@@ -338,7 +341,7 @@ function App() {
                         </OverlayTrigger>
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, equities)}>
                           <Container className={'can-hover'}>
                             <Row>
@@ -353,7 +356,7 @@ function App() {
                         </OverlayTrigger>
                       </td>
                       <td>
-                        <OverlayTrigger delay={{show: 50, hide: 150}} placement='bottom'
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
                                         overlay={props => renderTooltip(props, cashFlows)}>
                           <Container className={'can-hover'}>
                             <Row>
