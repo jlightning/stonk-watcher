@@ -278,7 +278,7 @@ function App() {
                 let targetPriceDiscount = (targetPrice - price) * 100 / targetPrice;
                 let msFairPriceDiscount = (msFairPrice - price) * 100 / msFairPrice;
 
-                let tooltipPlacement = tIdx > tickers.length - 5 ? 'top' : 'bottom'
+                let tooltipPlacement = tIdx > tickers.length - 10 && tIdx > 10 ? 'top' : 'bottom'
 
                 return (
                   <>

@@ -262,7 +262,7 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 				if amount != nil {
 					money := entities.Money(*amount)
 					if parseByOrderOfMagnitude {
-						money = incomeStmResp.getMoney(*amount)
+						money = stm.getMoney(*amount)
 					}
 					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
 				} else {
