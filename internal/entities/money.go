@@ -24,7 +24,6 @@ type ListFloatGetter interface {
 }
 
 type Money float64
-type ListMoney []Money
 
 func NewMoney(i float64) *Money {
 	m := Money(i)
@@ -47,6 +46,9 @@ func (m Money) MarshalJSON() ([]byte, error) {
 	if m.IsNaN() {
 		return []byte("null"), nil
 	}
+	if math.IsInf(m.Get(), 0) {
+		return []byte("null"), nil
+	}
 	return []byte(fmt.Sprintf("%.2f", m)), nil
 }
 
@@ -64,22 +66,7 @@ func (m *Money) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
-func (lm *ListMoney) Set(list []float64) {
-	*lm = make(ListMoney, 0, len(list))
-	for _, i := range list {
-		*lm = append(*lm, Money(i))
-	}
-}
-
-func (lm ListMoney) GetListFloat() (r []float64) {
-	for _, i := range lm {
-		r = append(r, float64(i))
-	}
-	return
-}
-
 type Percentage float64
-type ListPercentage []Percentage
 
 func NewPercentage(i float64) *Percentage {
 	p := Percentage(i)
@@ -96,20 +83,6 @@ func (p Percentage) Get() float64 {
 
 func (p Percentage) IsNaN() bool {
 	return math.IsNaN(float64(p))
-}
-
-func (lp *ListPercentage) Set(list []float64) {
-	*lp = make(ListPercentage, 0, len(list))
-	for _, i := range list {
-		*lp = append(*lp, Percentage(i))
-	}
-}
-
-func (lp ListPercentage) GetListFloat() (r []float64) {
-	for _, i := range lp {
-		r = append(r, float64(i))
-	}
-	return
 }
 
 func (m *Percentage) UnmarshalJSON(bytes []byte) error {
@@ -130,6 +103,9 @@ func (m *Percentage) UnmarshalJSON(bytes []byte) error {
 
 func (m Percentage) MarshalJSON() ([]byte, error) {
 	if m.IsNaN() {
+		return []byte("null"), nil
+	}
+	if math.IsInf(m.Get(), 0) {
 		return []byte("null"), nil
 	}
 	return []byte(fmt.Sprintf(`{"amount": %.2f, "percent": "%.2f%%"}`, m, m*100)), nil

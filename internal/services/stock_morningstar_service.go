@@ -386,10 +386,14 @@ func calculateMargin(marginOfs entities.ListYearAmount, amounts entities.ListYea
 				continue
 			}
 
-			res = append(res, entities.YearAmount{
+			ym := entities.YearAmount{
 				Year:   marginOf.Year,
 				Amount: entities.NewPercentage(amount.Amount.Get() / marginOf.Amount.Get()),
-			})
+			}
+			if math.IsInf(ym.Amount.Get(), 0) {
+				continue
+			}
+			res = append(res, ym)
 		}
 	}
 
