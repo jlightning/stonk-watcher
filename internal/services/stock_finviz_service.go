@@ -55,6 +55,10 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 				if found && i == 1 {
 					stockInfo.CompanyName = element.Text
 				}
+
+				if found && i == 2 {
+					stockInfo.Sector = strings.TrimSpace(strings.Split(element.Text, "|")[0])
+				}
 			})
 		})
 	})

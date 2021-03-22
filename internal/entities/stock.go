@@ -26,6 +26,7 @@ type FinvizStockInfoDTO struct {
 	EPSTTM           Money      `json:"epsttm"`
 	Url              string     `json:"url"`
 	ShareOutstanding Money      `json:"share_outstanding"`
+	Sector           string     `json:"sector"`
 }
 
 type MarketWatchInfoDTO struct {
