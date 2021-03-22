@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"regexp"
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strings"
@@ -48,7 +49,7 @@ func GetDataFromFinviz(ticker string) (*entities.FinvizStockInfoDTO, error) {
 		body.ForEach("table", func(i int, e *colly.HTMLElement) {
 			found := false
 			e.ForEach("td", func(i int, element *colly.HTMLElement) {
-				if i == 0 && strings.HasPrefix(element.Text, strings.ToUpper(ticker)) {
+				if i == 0 && regexp.MustCompile(fmt.Sprintf("%s \\[[A-Z]+\\]", strings.ToUpper(ticker))).MatchString(element.Text) {
 					found = true
 				}
 
