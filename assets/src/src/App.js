@@ -201,14 +201,20 @@ function App() {
               <th>
                 <Container>
                   <Row className={'row-th'}>Gross Income</Row>
-                  <Row className={'row-th'}>Margin (Current)</Row>
+                  <Row className={'row-th'}>Margin</Row>
                 </Container>
               </th>
-              <th><Container><Row className={'row-th'}>ROIC (10 5 1)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Sales Growth (10 5 2)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>EPS Growth (10 5 2)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Equity Growth (10 5 2)</Row></Container></th>
-              <th><Container><Row className={'row-th'}>Cash Flow Growth (10 5 2)</Row></Container></th>
+              <th>
+                <Container>
+                  <Row className={'row-th'}>Net Income</Row>
+                  <Row className={'row-th'}>Margin</Row>
+                </Container>
+              </th>
+              <th><Container><Row className={'row-th'}>ROIC</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Sales Growth</Row></Container></th>
+              <th><Container><Row className={'row-th'}>EPS Growth</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Equity Growth</Row></Container></th>
+              <th><Container><Row className={'row-th'}>Cash Flow Growth</Row></Container></th>
               <th>
                 <Container>
                   <Row className={'row-th'}>Dividend</Row>
@@ -257,9 +263,11 @@ function App() {
                 let cashFlows = [];
                 let cashFlowGrowths = [];
                 let grossIncomeMargins = [];
+                let netIncomeMargins = [];
                 const detail = get(details, `['${t}']`)
                 if (detail) {
-                  grossIncomeMargins = get(detail, 'marketwatch_info.gross_income_margin');
+                  grossIncomeMargins = get(detail, 'morningstar_info.financial_data.gross_profit_margins') || get(detail, 'marketwatch_info.gross_income_margin') || [];
+                  netIncomeMargins = get(detail, 'morningstar_info.financial_data.net_profit_margins') || get(detail, 'marketwatch_info.net_income_margins') || [];
                   rois = sales = get(detail, 'morningstar_info.rois') || [];
                   roiGrowths = sales = get(detail, 'morningstar_info.roi_growths') || [];
                   sales = get(detail, 'morningstar_info.financial_data.revenues') || get(detail, 'marketwatch_info.sales') || [];
@@ -310,6 +318,18 @@ function App() {
                                   <ColorBox
                                     dangerLevel={getGrossIncomeMarginDangerLevel(get(r, 'amount.amount'))}>{get(r, 'amount.percent', '-')}</ColorBox>
                                 </Col>
+                              ))}
+                            </Row>
+                          </Container>
+                        </OverlayTrigger>
+                      </td>
+                      <td>
+                        <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                                        overlay={props => renderTooltip(props, netIncomeMargins, 'Net Income Margin', true)}>
+                          <Container className={'can-hover'}>
+                            <Row>
+                              {takeRight(netIncomeMargins, 1).map(r => (
+                                <Col>{get(r, 'amount.percent', '-')}</Col>
                               ))}
                             </Row>
                           </Container>

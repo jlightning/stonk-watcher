@@ -36,6 +36,7 @@ type MarketWatchInfoDTO struct {
 	GrossIncomeMargin   ListYearAmount `json:"gross_income_margin"`
 	PretaxIncome        ListYearAmount `json:"pretax_income"`
 	NetIncome           ListYearAmount `json:"net_income"`
+	NetIncomeMargins    ListYearAmount `json:"net_income_margins"`
 	EPS                 ListYearAmount `json:"eps"`
 	EPSGrowths          ListYearAmount `json:"eps_growths"`
 	TotalAssets         ListYearAmount `json:"total_assets"`
@@ -50,14 +51,20 @@ type MarketWatchInfoDTO struct {
 }
 
 type MorningStarFinancialData struct {
-	Revenues        ListYearAmount `json:"revenues"`
-	RevenueGrowths  ListYearAmount `json:"revenue_growths"`
-	EPS             ListYearAmount `json:"eps"`
-	EPSGrowths      ListYearAmount `json:"eps_growths"`
-	Equities        ListYearAmount `json:"equities"`
-	EquityGrowths   ListYearAmount `json:"equity_growths"`
-	CashFlows       ListYearAmount `json:"cash_flows"`
-	CashFlowGrowths ListYearAmount `json:"cash_flow_growths"`
+	Revenues           ListYearAmount `json:"revenues"`
+	RevenueGrowths     ListYearAmount `json:"revenue_growths"`
+	GrossProfits       ListYearAmount `json:"gross_profits"`
+	GrossProfitGrowths ListYearAmount `json:"gross_profit_growths"`
+	GrossProfitMargins ListYearAmount `json:"gross_profit_margins"`
+	NetProfits         ListYearAmount `json:"net_profits"`
+	NetProfitGrowths   ListYearAmount `json:"net_profit_growths"`
+	NetProfitMargins   ListYearAmount `json:"net_profit_margins"`
+	EPS                ListYearAmount `json:"eps"`
+	EPSGrowths         ListYearAmount `json:"eps_growths"`
+	Equities           ListYearAmount `json:"equities"`
+	EquityGrowths      ListYearAmount `json:"equity_growths"`
+	CashFlows          ListYearAmount `json:"cash_flows"`
+	CashFlowGrowths    ListYearAmount `json:"cash_flow_growths"`
 }
 
 type MorningStarPerformanceDTO struct {

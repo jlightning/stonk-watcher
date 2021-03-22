@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tidwall/pretty"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/gocolly/colly"
@@ -222,11 +224,11 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 				logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 			}
 
-			//ioutil.WriteFile(stmType+".tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
-			//	Width:  180,
-			//	Prefix: "",
-			//	Indent: "  ",
-			//}), 0600)
+			ioutil.WriteFile(stmType+".tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+				Width:  180,
+				Prefix: "",
+				Indent: "  ",
+			}), 0600)
 		})
 
 		err := c.Visit(apiURL)
@@ -279,6 +281,18 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths, true); err != nil {
 		return nil, err
 	}
+
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit"}, &res.GrossProfits, &res.GrossProfitGrowths, true); err != nil {
+		return nil, err
+	}
+
+	res.GrossProfitMargins = calculateMargin(res.Revenues, res.GrossProfits)
+
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Pretax Income"}, &res.NetProfits, &res.NetProfitGrowths, true); err != nil {
+		return nil, err
+	}
+
+	res.NetProfitMargins = calculateMargin(res.Revenues, res.NetProfits)
 
 	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths, false); err != nil {
 		return nil, err
@@ -359,6 +373,27 @@ func calculateAverage(input []entities.YearAmount) []entities.YearAmount {
 	}
 
 	return res
+}
+
+func calculateMargin(marginOfs entities.ListYearAmount, amounts entities.ListYearAmount) (res entities.ListYearAmount) {
+	for _, marginOf := range marginOfs {
+		if marginOf.Amount.IsNaN() {
+			continue
+		}
+
+		for _, amount := range amounts {
+			if amount.Amount.IsNaN() || amount.Year.Year != marginOf.Year.Year || amount.Year.IsTTM != marginOf.Year.IsTTM {
+				continue
+			}
+
+			res = append(res, entities.YearAmount{
+				Year:   marginOf.Year,
+				Amount: entities.NewPercentage(amount.Amount.Get() / marginOf.Amount.Get()),
+			})
+		}
+	}
+
+	return
 }
 
 func getMorningstarStockID(ticker string, prefix *string) (string, string, error) {

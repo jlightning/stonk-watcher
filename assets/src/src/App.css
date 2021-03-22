@@ -1,6 +1,7 @@
 .App {
   text-align: center;
   font-size: 9px;
+  margin-bottom: 100px;
 }
 
 .App-logo {
@@ -30,7 +31,7 @@
 }
 
 .App .stock-table td {
-   padding: 0.3rem;
+  padding: 0.3rem;
 }
 
 .App .stock-table .row .col {

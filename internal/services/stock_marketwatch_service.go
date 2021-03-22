@@ -2,7 +2,6 @@ package services
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"sort"
 	"stonk-watcher/internal/entities"
@@ -83,20 +82,8 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 		}
 	}
 
-	for i, sale := range stockInfo.Sales {
-		if len(stockInfo.GrossIncome) > i {
-			grossIncome := stockInfo.GrossIncome[i]
-
-			if !sale.Amount.IsNaN() && !grossIncome.Amount.IsNaN() {
-				amount := grossIncome.Amount.Get() / sale.Amount.Get()
-				percentage := entities.Percentage(amount)
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.YearAmount{Year: entities.Year{Year: uint(years[i])}, Amount: &percentage})
-			} else {
-				percentage := entities.Percentage(math.NaN())
-				stockInfo.GrossIncomeMargin = append(stockInfo.GrossIncomeMargin, entities.YearAmount{Year: entities.Year{Year: uint(years[i])}, Amount: &percentage})
-			}
-		}
-	}
+	stockInfo.GrossIncomeMargin = calculateMargin(stockInfo.Sales, stockInfo.GrossIncome)
+	stockInfo.NetIncomeMargins = calculateMargin(stockInfo.Sales, stockInfo.NetIncome)
 
 	sort.Sort(stockInfo.GrossIncomeMargin)
 
