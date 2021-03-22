@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tidwall/pretty"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/gocolly/colly"
@@ -224,11 +222,11 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 				logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 			}
 
-			ioutil.WriteFile(stmType+".tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
-				Width:  180,
-				Prefix: "",
-				Indent: "  ",
-			}), 0600)
+			//ioutil.WriteFile(stmType+".tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+			//	Width:  180,
+			//	Prefix: "",
+			//	Indent: "  ",
+			//}), 0600)
 		})
 
 		err := c.Visit(apiURL)
@@ -288,7 +286,7 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 
 	res.GrossProfitMargins = calculateMargin(res.Revenues, res.GrossProfits)
 
-	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Pretax Income"}, &res.NetProfits, &res.NetProfitGrowths, true); err != nil {
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Total Operating Profit/Loss"}, &res.NetProfits, &res.NetProfitGrowths, true); err != nil {
 		return nil, err
 	}
 
