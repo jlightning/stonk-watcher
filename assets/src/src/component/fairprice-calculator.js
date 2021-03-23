@@ -2,6 +2,7 @@ import {get} from 'lodash';
 import {Col, Container, FormControl, InputGroup, Row, Table} from "react-bootstrap";
 import {humanizeMoney} from "../util/common";
 import {useEffect, useState} from "react";
+import {CanvasJSChart} from "canvasjs-react-charts";
 
 export const FairPriceCalculator = ({tickerInfo}) => {
   const [cashFlows, setCashFlows] = useState([]);
@@ -68,6 +69,28 @@ export const FairPriceCalculator = ({tickerInfo}) => {
             </tr>
           </Table>
         </Col>
+      </Row>
+      <Row>
+        <CanvasJSChart options={{
+          theme: "light2", // "light1", "dark1", "dark2"
+          axisY: {
+            title: "Cash Flow",
+            suffix: '$',
+          },
+          axisX: {
+            title: "Year",
+            prefix: "Y",
+            interval: 2
+          },
+          data: [{
+            type: "line",
+            toolTipContent: "Year {x}: {y}%",
+            dataPoints: cashFlows.map(item => ({
+              x: item.year.year,
+              y: item.amount,
+            }))
+          }]
+        }}/>
       </Row>
       <Row>
         <Col>

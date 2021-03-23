@@ -169,8 +169,8 @@ function App() {
           },
           data: [{
             type: "line",
-            toolTipContent: "Week {x}: {y}%",
-            dataPoints: data.map((item, idx) => ({
+            toolTipContent: "Year {x}: {y}%",
+            dataPoints: data.map(item => ({
               x: item.year.year,
               y: isPercentage ? item.amount.amount * 100 : item.amount,
             }))
