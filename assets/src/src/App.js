@@ -11,6 +11,7 @@ import {
   Table
 } from "react-bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './bootstrap.min.css';
 import './App.css';
 import {useEffect, useState} from "react";
 import {get, takeRight} from 'lodash';
