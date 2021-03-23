@@ -24,7 +24,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 	router.GET("/stock", handlers.StockHandler)
-	router.DELETE("/stock", handlers.TruncateStockInfo)
+	router.DELETE("/stock", handlers.DeleteStockInfo)
 	router.GET("/stock/price", handlers.StockPriceHandler)
 	router.GET("/watchlist", handlers.GetWatchlistHandler)
 	router.POST("/watchlist", handlers.UpdateWatchlistHandler)

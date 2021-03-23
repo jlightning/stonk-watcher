@@ -84,6 +84,11 @@ func getStockInfoVersion() (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
+func DeleteStockInfo(ticker string) error {
+	ticker = strings.ToLower(ticker)
+	return truncateData(regexp.MustCompile(fmt.Sprintf("^stock-info-%s\\.json$", ticker)))
+}
+
 func TruncateStockInfo() error {
 	return truncateData(regexp.MustCompile("^stock-info-.*\\.json$"))
 }

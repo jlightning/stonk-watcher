@@ -38,6 +38,10 @@
   padding-right: 5px;
 }
 
+.App .stock-table .container.action-button .row .col {
+  padding: 0;
+}
+
 .App .stock-table .row-th {
   text-align: center;
   display: block;

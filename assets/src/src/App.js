@@ -22,11 +22,11 @@ import {
   getReturnColorDangerLevel,
   getRSIDangerLevel,
   getShortFloatDangerLevel,
-  humanizeMoney
+  humanizeMoney, shortenString
 } from "./util/common";
 import {ColorBox} from "./component/colorbox";
 import {FairPriceCalculator} from "./component/fairprice-calculator";
-import {FaEdit} from "react-icons/all";
+import {FaEdit, FaTrash} from "react-icons/all";
 import {CanvasJSChart} from "canvasjs-react-charts";
 import {PerformanceTooltip} from "./component/performance-tooltip";
 
@@ -60,11 +60,13 @@ function App() {
     }
   });
 
+  const loadTickerStockInfo = async t => {
+    const res = await fetch(`${SERVER_URL}stock?ticker=${t}`).then(r => r.json());
+    setDetails(prevDate => ({...prevDate, [t]: res}));
+  }
+
   useEffect(() => {
-    tickers.forEach(async t => {
-      const res = await fetch(`${SERVER_URL}stock?ticker=${t}`).then(r => r.json());
-      setDetails(prevDate => ({...prevDate, [t]: res}));
-    })
+    tickers.forEach(loadTickerStockInfo)
 
     setTickerStr(tickers.reduce((a, b) => a + (a ? ', ' : '') + b, ''));
   }, [tickers]);
@@ -94,6 +96,14 @@ function App() {
     })
     setDetails({});
     setTickers(prevState => [...prevState])
+  }
+
+  const deleteStockInfo = async (t) => {
+    await fetch(`${SERVER_URL}stock?ticker=${t}`, {
+      method: 'DELETE',
+    })
+    setDetails(prevState => ({...prevState, [t]: null}));
+    await loadTickerStockInfo(t)
   }
 
   const updateWatchList = async () => {
@@ -194,18 +204,12 @@ function App() {
                       <Row className={'row-th'}>Fair Price</Row>
                     </Container>
                   </th>
-                  <th>
-                    <Container>
-                      <Row className={'row-th'}>My</Row>
-                      <Row className={'row-th'}>Fair Price</Row>
-                    </Container>
-                  </th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                  <td colSpan={2}>{splatTicker.sector}</td>
-                  <td colSpan={18}>-</td>
+                  <td colSpan={4}>{splatTicker.sector}</td>
+                  <td colSpan={15}>-</td>
                 </tr>
                 {
                   splatTicker.tickers.map((t, tIdx) => {
@@ -249,7 +253,7 @@ function App() {
                       <>
                         <tr>
                           <td>{t}</td>
-                          <td>{get(details, `['${t}'].finviz_info.company_name`, '-')}</td>
+                          <td>{shortenString(get(details, `['${t}'].finviz_info.company_name`, '-'), 12)}</td>
                           <td>
                             <ColorBox
                               dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
@@ -396,16 +400,6 @@ function App() {
                               </Row>
                             </Container>
                           </td>
-                          <td>
-                            <Container>
-                              <Row>
-                                <Col>
-                                  <button className={'no-style'} onClick={e => showMyFairPriceModal(detail)}><FaEdit/>
-                                  </button>
-                                </Col>
-                              </Row>
-                            </Container>
-                          </td>
                         </tr>
                         <tr>
                           <td colSpan={2}>URL</td>
@@ -415,7 +409,22 @@ function App() {
                                              target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
                           <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)}
                                              target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>
-                          <td colSpan={7}>-</td>
+                          <td colSpan={3}>-</td>
+                          <td colSpan={2}>Action</td>
+                          <td>
+                            <Container className={'action-button'}>
+                              <Row>
+                                <Col>
+                                  <button className={'no-style'} onClick={e => showMyFairPriceModal(detail)}><FaEdit/>
+                                  </button>
+                                </Col>
+                                <Col>
+                                  <button className={'no-style'} onClick={e => deleteStockInfo(t)}><FaTrash/>
+                                  </button>
+                                </Col>
+                              </Row>
+                            </Container>
+                          </td>
                         </tr>
                       </>
                     )

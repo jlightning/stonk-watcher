@@ -40,8 +40,18 @@ func StockPriceHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func TruncateStockInfo(c *gin.Context) {
-	err := repositories.TruncateStockInfo()
+func DeleteStockInfo(c *gin.Context) {
+	ticker := c.Query("ticker")
+	if ticker == "" {
+		err := repositories.TruncateStockInfo()
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.JSON(http.StatusOK, "OK")
+	}
+
+	err := repositories.DeleteStockInfo(strings.ToUpper(ticker))
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

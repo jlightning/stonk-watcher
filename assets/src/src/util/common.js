@@ -128,3 +128,10 @@ export const humanizeMoney = (amount) => {
   }
   return amount;
 }
+
+export const shortenString = (input, length) => {
+  if (input.length > length) {
+    return input.substring(0, length) + '...';
+  }
+  return input;
+}
