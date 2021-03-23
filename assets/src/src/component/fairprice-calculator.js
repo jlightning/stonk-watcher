@@ -4,6 +4,7 @@ import {humanizeMoney} from "../util/common";
 import {useEffect, useState} from "react";
 
 export const FairPriceCalculator = ({tickerInfo}) => {
+  const [cashFlows, setCashFlows] = useState([]);
   const [currentCashFlow, setCurrentCashFlow] = useState(0);
   const [expectedReturn, setExpectedReturn] = useState(0);
   const [currentCashFlowGrowth, setCurrentCashFlowGrowth] = useState(0);
@@ -11,13 +12,15 @@ export const FairPriceCalculator = ({tickerInfo}) => {
   const [shareOutstanding, setShareOutstanding] = useState(0);
 
   useEffect(() => {
-    const arr = get(tickerInfo, 'marketwatch_info.free_cash_flow', []);
-    if (arr.length > 0) {
-      setCurrentCashFlow(arr[arr.length - 1]);
-    }
-
+    setCashFlows(get(tickerInfo, 'morningstar_info.financial_data.cash_flows') || get(tickerInfo, 'marketwatch_info.free_cash_flow') || []);
     setShareOutstanding(get(tickerInfo, 'finviz_info.share_outstanding', 0));
   }, [tickerInfo]);
+
+  useEffect(() => {
+    if (cashFlows.length > 0) {
+      setCurrentCashFlow(cashFlows[cashFlows.length - 1].amount);
+    }
+  }, [cashFlows])
 
   useEffect(() => {
     let arr = [];
@@ -37,29 +40,28 @@ export const FairPriceCalculator = ({tickerInfo}) => {
     <Container>
       <Row>
         <Col>
-          <Table striped bordered hover>
+          <Table striped bordered hover style={{fontSize: '11px'}}>
             <tr>
               <td>Year</td>
               {
-                get(tickerInfo, 'marketwatch_info.years', []).map(y => <td>{y}</td>)
+                cashFlows.map(cf => <td>{cf.year.year}</td>)
               }
             </tr>
             <tr>
               <td>Cash Flow</td>
               {
-                get(tickerInfo, 'marketwatch_info.free_cash_flow', []).map(cf => <td>{humanizeMoney(cf)}</td>)
+                cashFlows.map(cf => <td>{humanizeMoney(cf.amount)}</td>)
               }
             </tr>
             <tr>
               <td>Cash Flow Growth</td>
               {
                 (() => {
-                  const arr = get(tickerInfo, 'marketwatch_info.free_cash_flow', []);
-                  return arr.map((cf, idx) => {
+                  return cashFlows.map((cf, idx) => {
                     if (idx === 0) {
                       return <td>-</td>;
                     }
-                    return <td>{`${((cf - arr[idx - 1]) * 100 / Math.abs(arr[idx - 1])).toFixed(2)}%`}</td>
+                    return <td>{`${((cf.amount - cashFlows[idx - 1].amount) * 100 / Math.abs(cashFlows[idx - 1].amount)).toFixed(2)}%`}</td>
                   });
                 })()
               }
