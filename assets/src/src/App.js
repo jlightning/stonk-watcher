@@ -26,7 +26,7 @@ import {
 } from "./util/common";
 import {ColorBox} from "./component/colorbox";
 import {FairPriceCalculator} from "./component/fairprice-calculator";
-import {FaEdit, FaTrash} from "react-icons/all";
+import {FaEdit, FaRedo, FaTrash} from "react-icons/all";
 import {CanvasJSChart} from "canvasjs-react-charts";
 import {PerformanceTooltip} from "./component/performance-tooltip";
 
@@ -247,8 +247,6 @@ function App() {
                     let targetPriceDiscount = (targetPrice - price) * 100 / targetPrice;
                     let msFairPriceDiscount = (msFairPrice - price) * 100 / msFairPrice;
 
-                    let tooltipPlacement = 'right';
-
                     return (
                       <>
                         <tr>
@@ -270,7 +268,7 @@ function App() {
                             {get(details, `['${t}'].finviz_info.pb.amount`, '-')}
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, grossIncomeMargins, 'Gross Income Margin', true)}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -285,7 +283,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, netIncomeMargins, 'Net Income Margin', true)}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -297,7 +295,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, rois, 'ROI', true)}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -312,7 +310,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, sales, 'Revenue')}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -327,7 +325,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, eps, 'EPS')}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -342,7 +340,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
                                             overlay={props => renderTooltip(props, equities, 'Equity')}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -357,7 +355,7 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={tooltipPlacement}
+                            <OverlayTrigger delay={{show: 50, hide: 150}} placement={'left'}
                                             overlay={props => renderTooltip(props, cashFlows, 'Cash Flow')}>
                               <Container className={'can-hover'}>
                                 <Row>
@@ -419,7 +417,7 @@ function App() {
                                   </button>
                                 </Col>
                                 <Col>
-                                  <button className={'no-style'} onClick={e => deleteStockInfo(t)}><FaTrash/>
+                                  <button className={'no-style'} onClick={e => deleteStockInfo(t)}><FaRedo/>
                                   </button>
                                 </Col>
                               </Row>
