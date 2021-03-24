@@ -27,6 +27,13 @@ type morningStarPerformanceResponseDTO struct {
 				Percentage bool     `json:"percentage"`
 			} `json:"rows"`
 		} `json:"Collapsed"`
+		Expanded struct {
+			Rows []struct {
+				Label      string   `json:"label"`
+				Datum      []string `json:"datum"`
+				Percentage bool     `json:"percentage"`
+			} `json:"rows"`
+		} `json:"Expanded"`
 	} `json:"reported"`
 }
 
@@ -119,20 +126,20 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 
 	var rois []entities.YearAmount
 	for _, row := range performanceDTO.Reported.Collapsed.Rows {
-		if strings.Contains(strings.ToLower(row.Label), "invested capital") {
-			for idx, col := range performanceDTO.Reported.Columns {
-				roiStr := row.Datum[idx]
-				roi, err := strconv.ParseFloat(roiStr, 64)
-				if err != nil {
-					continue
-				}
+		for idx, col := range performanceDTO.Reported.Columns {
+			dataStr := row.Datum[idx]
+			amount, err := strconv.ParseFloat(dataStr, 64)
+			if err != nil {
+				continue
+			}
 
-				if regexp.MustCompile("^[0-9]+$").MatchString(col) || strings.ToLower(col) == "ttm" {
-					year, err := entities.NewYear(col)
-					if err != nil {
-						return nil, err
-					}
-					roiPercentage := entities.Percentage(roi / 100)
+			if regexp.MustCompile("^[0-9]+$").MatchString(col) || strings.ToLower(col) == "ttm" {
+				year, err := entities.NewYear(col)
+				if err != nil {
+					return nil, err
+				}
+				if strings.Contains(strings.ToLower(row.Label), "invested capital") {
+					roiPercentage := entities.Percentage(amount / 100)
 					rois = append(rois, entities.YearAmount{
 						Year:   year,
 						Amount: &roiPercentage,
@@ -141,6 +148,38 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 			}
 		}
 	}
+
+	for _, row := range performanceDTO.Reported.Expanded.Rows {
+		for idx, col := range performanceDTO.Reported.Columns {
+			dataStr := row.Datum[idx]
+			amount, err := strconv.ParseFloat(dataStr, 64)
+			if err != nil {
+				continue
+			}
+
+			if regexp.MustCompile("^[0-9]+$").MatchString(col) || strings.ToLower(col) == "ttm" {
+				year, err := entities.NewYear(col)
+				if err != nil {
+					return nil, err
+				}
+
+				if strings.Contains(strings.ToLower(row.Label), "gross margin %") {
+					financialData.GrossProfitMargins = append(financialData.GrossProfitMargins, entities.YearAmount{
+						Year:   year,
+						Amount: entities.NewPercentage(amount / 100),
+					})
+				}
+
+				if strings.Contains(strings.ToLower(row.Label), "net margin %") {
+					financialData.NetProfitMargins = append(financialData.NetProfitMargins, entities.YearAmount{
+						Year:   year,
+						Amount: entities.NewPercentage(amount / 100),
+					})
+				}
+			}
+		}
+	}
+
 	latestFairPrice, _ := util.ParseMoney(fairPriceDTO.Chart.ChartDatums.Recent.LatestFairValue)
 
 	response := entities.MorningStarPerformanceDTO{
@@ -170,6 +209,12 @@ func getMorningstarPerformance(stockMSID string, headerData map[string]string) (
 		if err != nil {
 			logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 		}
+
+		//ioutil.WriteFile("performance.tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+		//	Width:  180,
+		//	Prefix: "",
+		//	Indent: "  ",
+		//}), 0600)
 	})
 
 	err := c.Visit(apiURL)
@@ -284,13 +329,9 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 		return nil, err
 	}
 
-	res.GrossProfitMargins = calculateMargin(res.Revenues, res.GrossProfits)
-
 	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Total Operating Profit/Loss"}, &res.NetProfits, &res.NetProfitGrowths, true); err != nil {
 		return nil, err
 	}
-
-	res.NetProfitMargins = calculateMargin(res.Revenues, res.NetProfits)
 
 	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths, false); err != nil {
 		return nil, err
