@@ -68,10 +68,16 @@ type MorningStarFinancialData struct {
 	CashFlowGrowths    ListYearAmount `json:"cash_flow_growths"`
 }
 
+type MorningStarValuationData struct {
+	PriceOnEarnings ListYearAmount `json:"price_on_earnings"`
+	PriceOnBooks    ListYearAmount `json:"price_on_books"`
+}
+
 type MorningStarPerformanceDTO struct {
 	ROIs            ListYearAmount           `json:"rois"`
 	ROIGrowths      ListYearAmount           `json:"roi_growths"`
 	LatestFairPrice float64                  `json:"latest_fair_price"`
 	Url             string                   `json:"url"`
 	FinancialData   MorningStarFinancialData `json:"financial_data"`
+	ValuationData   MorningStarValuationData `json:"valuation_data"`
 }

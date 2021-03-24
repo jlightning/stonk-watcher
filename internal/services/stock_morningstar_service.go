@@ -37,6 +37,17 @@ type morningStarPerformanceResponseDTO struct {
 	} `json:"reported"`
 }
 
+type morningStarValuationResponseDTO struct {
+	Collapsed struct {
+		Rows []struct {
+			Label      string   `json:"label"`
+			Datum      []string `json:"datum"`
+			Percentage bool     `json:"percentage"`
+		} `json:"rows"`
+		Columns []string `json:"columnDefs"`
+	} `json:"collapsed"`
+}
+
 type morningStarFairPriceDTO struct {
 	Chart struct {
 		ChartDatums struct {
@@ -124,9 +135,17 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		return nil, err
 	}
 
+	valuationDTO, err := getMorningStarValuationData(stockMSID, headerData)
+	if err != nil {
+		return nil, err
+	}
+
 	var rois []entities.YearAmount
 	for _, row := range performanceDTO.Reported.Collapsed.Rows {
 		for idx, col := range performanceDTO.Reported.Columns {
+			if len(row.Datum) <= idx {
+				continue
+			}
 			dataStr := row.Datum[idx]
 			amount, err := strconv.ParseFloat(dataStr, 64)
 			if err != nil {
@@ -151,6 +170,9 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 
 	for _, row := range performanceDTO.Reported.Expanded.Rows {
 		for idx, col := range performanceDTO.Reported.Columns {
+			if len(row.Datum) <= idx {
+				continue
+			}
 			dataStr := row.Datum[idx]
 			amount, err := strconv.ParseFloat(dataStr, 64)
 			if err != nil {
@@ -188,6 +210,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		LatestFairPrice: latestFairPrice,
 		Url:             url,
 		FinancialData:   *financialData,
+		ValuationData:   *valuationDTO,
 	}
 
 	return &response, nil
@@ -223,6 +246,77 @@ func getMorningstarPerformance(stockMSID string, headerData map[string]string) (
 	}
 
 	return &responseDTO, nil
+}
+
+func getMorningStarValuationData(stockMSID string, headerData map[string]string) (*entities.MorningStarValuationData, error) {
+	c := colly.NewCollector()
+	apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/valuation/v3/%s?clientId=MDC&benchmarkId=category&version=3.41.0", stockMSID)
+
+	var responseDTO morningStarValuationResponseDTO
+
+	c.OnRequest(func(request *colly.Request) {
+		for k, v := range headerData {
+			request.Headers.Add(k, v)
+		}
+	})
+	c.OnResponse(func(response *colly.Response) {
+		err := json.Unmarshal(response.Body, &responseDTO)
+		if err != nil {
+			logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
+		}
+
+		//ioutil.WriteFile("valuation.tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+		//	Width:  180,
+		//	Prefix: "",
+		//	Indent: "  ",
+		//}), 0600)
+	})
+
+	err := c.Visit(apiURL)
+	if err != nil {
+		return nil, err
+	}
+
+	var valuationDTO entities.MorningStarValuationData
+
+	for _, row := range responseDTO.Collapsed.Rows {
+		for idx, col := range responseDTO.Collapsed.Columns {
+			if idx == 0 {
+				continue
+			}
+			if len(row.Datum) <= idx-1 {
+				continue
+			}
+			dataStr := row.Datum[idx-1]
+			amount, err := strconv.ParseFloat(dataStr, 64)
+			if err != nil {
+				continue
+			}
+
+			if regexp.MustCompile("^[0-9]+$").MatchString(col) || strings.ToLower(col) == "ttm" || strings.ToLower(col) == "current" {
+				year, err := entities.NewYear(col)
+				if err != nil {
+					return nil, err
+				}
+
+				if strings.Contains(strings.ToLower(row.Label), "price/earnings") {
+					valuationDTO.PriceOnEarnings = append(valuationDTO.PriceOnEarnings, entities.YearAmount{
+						Year:   year,
+						Amount: entities.NewPercentage(amount),
+					})
+				}
+
+				if strings.Contains(strings.ToLower(row.Label), "price/book") {
+					valuationDTO.PriceOnBooks = append(valuationDTO.PriceOnBooks, entities.YearAmount{
+						Year:   year,
+						Amount: entities.NewPercentage(amount),
+					})
+				}
+			}
+		}
+	}
+
+	return &valuationDTO, nil
 }
 
 func getMorningstarFairPrice(stockMSID string, headerData map[string]string) (*morningStarFairPriceDTO, error) {

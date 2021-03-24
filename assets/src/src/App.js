@@ -119,8 +119,8 @@ function App() {
     setShow(true);
   }
 
-  const renderTooltip = (ticker, props, data, title, isPercentage = false) => (
-    <PerformanceTooltip key={ticker} props={props} data={data} title={title} isPercentage={isPercentage}/>
+  const renderTooltip = (ticker, props, data, title, isPercentage = false, isProportion = false) => (
+    <PerformanceTooltip key={ticker} props={props} data={data} title={title} isPercentage={isPercentage} isProportion={isProportion}/>
   );
 
   return (
@@ -269,21 +269,28 @@ function App() {
                       <>
                         <tr key={t}>
                           <td>{t}</td>
-                          <td>{shortenString(get(details, `['${t}'].finviz_info.company_name`, '-'), 12)}</td>
+                          <td>{shortenString(get(detail, `finviz_info.company_name`, '-'), 12)}</td>
                           <td>
                             <ColorBox
-                              dangerLevel={getRSIDangerLevel(get(details, `['${t}'].finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
+                              dangerLevel={getRSIDangerLevel(get(detail, `finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
                           </td>
                           <td>
                             <ColorBox
-                              dangerLevel={getShortFloatDangerLevel(get(details, `['${t}'].finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                              dangerLevel={getShortFloatDangerLevel(get(detail, `finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
                           </td>
                           <td>
                             <ColorBox
-                              dangerLevel={getDebtEquityDangerLevel(get(details, `['${t}'].finviz_info.debt_on_equity.amount`))}>{get(details, `['${t}'].finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
+                              dangerLevel={getDebtEquityDangerLevel(get(detail, `finviz_info.debt_on_equity.amount`))}>{get(details, `['${t}'].finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
                           </td>
                           <td>
-                            {get(details, `['${t}'].finviz_info.pb.amount`, '-')}
+                            {!get(detail, 'morningstar_info.valuation_data.price_on_books') ? get(detail, `finviz_info.pb.amount`, '-') : (
+                              <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
+                                              overlay={props => renderTooltip(t, props, get(detail, 'morningstar_info.valuation_data.price_on_books'), 'Price On Books', true, true)}>
+                                <Container className={'can-hover'}>
+                                  {get(detail, `finviz_info.pb.amount`, '-')}
+                                </Container>
+                              </OverlayTrigger>
+                            )}
                           </td>
                           <td>
                             <OverlayTrigger delay={{show: 50, hide: 150}} placement={'right'}
@@ -388,14 +395,22 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            {get(details, `['${t}'].finviz_info.dividend_yield.percent`, '-')}
+                            {get(detail, `finviz_info.dividend_yield.percent`, '-')}
                           </td>
                           <td>
-                            {get(details, `['${t}'].finviz_info.epsttm`, '-')}
+                            {get(detail, `finviz_info.epsttm`, '-')}
                           </td>
                           <td>
-                            <ColorBox
-                              dangerLevel={getPeDangerLevel(get(details, `['${t}'].finviz_info.pe.amount`))}>{get(details, `['${t}'].finviz_info.pe.amount`, '-')}</ColorBox>
+                            {!get(detail, 'morningstar_info.valuation_data.price_on_earnings') ? (
+                              <ColorBox dangerLevel={getPeDangerLevel(get(detail, `finviz_info.pe.amount`))}>{get(detail, `finviz_info.pe.amount`, '-')}</ColorBox>
+                            ) : (
+                              <OverlayTrigger delay={{show: 50, hide: 150}} placement={'left'}
+                                              overlay={props => renderTooltip(t, props, get(detail, 'morningstar_info.valuation_data.price_on_earnings'), 'Price On Earnings', true, true)}>
+                                <Container className={'can-hover'}>
+                                  <ColorBox dangerLevel={getPeDangerLevel(get(detail, `finviz_info.pe.amount`))}>{get(detail, `finviz_info.pe.amount`, '-')}</ColorBox>
+                                </Container>
+                              </OverlayTrigger>
+                            )}
                           </td>
                           <td>{price}</td>
                           <td>

@@ -18,6 +18,10 @@ func NewYear(yearStr string) (Year, error) {
 		return Year{IsTTM: true, Year: uint(time.Now().Year())}, nil
 	}
 
+	if strings.ToLower(yearStr) == "current" {
+		return Year{IsTTM: true, Year: uint(time.Now().Year())}, nil
+	}
+
 	year, err := strconv.Atoi(yearStr)
 	if err != nil {
 		return Year{}, err

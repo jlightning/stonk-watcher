@@ -4,7 +4,7 @@ import {getReturnColorDangerLevel, humanizeMoney} from "../util/common";
 import {CanvasJSChart} from "canvasjs-react-charts";
 import {ColorBox} from "./colorbox";
 
-export const PerformanceTooltip = ({props, isPercentage, title, data}) => {
+export const PerformanceTooltip = ({props, isPercentage, isProportion, title, data}) => {
   return (
     <Popover id="button-tooltip" {...props}>
       <Popover.Title>{title}</Popover.Title>
@@ -22,7 +22,7 @@ export const PerformanceTooltip = ({props, isPercentage, title, data}) => {
                 <tr>
                   <td>Amount</td>
                   {data.map(item => (
-                    <td>{get(item, 'amount.percent')}</td>
+                    <td>{isProportion ? get(item, 'amount.amount') : get(item, 'amount.percent')}</td>
                   ))}
                 </tr>
               </>
@@ -57,7 +57,7 @@ export const PerformanceTooltip = ({props, isPercentage, title, data}) => {
           theme: "light2", // "light1", "dark1", "dark2"
           axisY: {
             title: title,
-            suffix: isPercentage ? '%' : '$',
+            suffix: isPercentage ? (isProportion ? '' : '%') : '$',
           },
           axisX: {
             title: "Year",
@@ -66,10 +66,10 @@ export const PerformanceTooltip = ({props, isPercentage, title, data}) => {
           },
           data: [{
             type: "line",
-            toolTipContent: "Year {x}: {y}%",
+            toolTipContent: `Year {x}: {y}${isPercentage ? (isProportion ? '' : '%') : '$'}`,
             dataPoints: data.map(item => ({
               x: item.year.year,
-              y: isPercentage ? item.amount.amount * 100 : item.amount,
+              y: isPercentage ? item.amount.amount * (isProportion ? 1 : 100) : item.amount,
             }))
           }]
         }}/>

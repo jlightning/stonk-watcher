@@ -108,5 +108,5 @@ func (m Percentage) MarshalJSON() ([]byte, error) {
 	if math.IsInf(m.Get(), 0) {
 		return []byte("null"), nil
 	}
-	return []byte(fmt.Sprintf(`{"amount": %.2f, "percent": "%.2f%%"}`, m, m*100)), nil
+	return []byte(fmt.Sprintf(`{"amount": %.4f, "percent": "%.2f%%"}`, m, m*100)), nil
 }
