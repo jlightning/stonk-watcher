@@ -10,10 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var stockInformation = util.NewProcessingQueue(5)
+var stockInformationQueue = util.NewProcessingQueue(5)
 
 func GetStockInformation(ticker string) (*entities.StockInfoDTO, error) {
-	result, err := stockInformation.Trigger(func() (interface{}, error) {
+	result, err := stockInformationQueue.Trigger(func() (interface{}, error) {
 		return getStockInformationWithRetry(ticker)
 	})
 	if err != nil {
