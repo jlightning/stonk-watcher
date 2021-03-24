@@ -461,7 +461,7 @@ function App() {
         className={'fairprice-edit-modal'}
       >
         <Modal.Header closeButton>
-          <Modal.Title>Fair Price Calculator</Modal.Title>
+          <Modal.Title>Fair Price Calculator for {get(fairPriceTickerInfo, 'finviz_info.company_name')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <FairPriceCalculator tickerInfo={fairPriceTickerInfo}/>

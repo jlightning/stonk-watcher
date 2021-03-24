@@ -84,7 +84,7 @@ export const FairPriceCalculator = ({tickerInfo}) => {
           },
           data: [{
             type: "line",
-            toolTipContent: "Year {x}: {y}%",
+            toolTipContent: "Year {x}: {y}$",
             dataPoints: cashFlows.map(item => ({
               x: item.year.year,
               y: item.amount,
