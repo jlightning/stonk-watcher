@@ -26,9 +26,10 @@ import {
   shortenString
 } from "./util/common";
 import {ColorBox} from "./component/colorbox";
-import {FairPriceCalculator} from "./component/fairprice-calculator";
 import {FaEdit, FaRedo} from "react-icons/all";
 import {PerformanceTooltip} from "./component/performance-tooltip";
+import {Rule1InvestingFairpriceCalculator} from "./component/rule-1-investing-fairprice-calculator";
+import {FairpriceCalculator} from "./component/fairprice-calculator";
 
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || '/';
 
@@ -479,7 +480,7 @@ function App() {
           <Modal.Title>Fair Price Calculator for {get(fairPriceTickerInfo, 'finviz_info.company_name')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <FairPriceCalculator tickerInfo={fairPriceTickerInfo}/>
+          <FairpriceCalculator tickerInfo={fairPriceTickerInfo}/>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="primary">Understood</Button>
