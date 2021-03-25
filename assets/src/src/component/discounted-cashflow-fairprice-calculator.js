@@ -30,7 +30,8 @@ export const DiscountedCashflowFairpriceCalculator = ({tickerInfo}) => {
     }
 
     arr = arr.map(cf => cf - cf * expectedReturn / 100);
-    setCalculatedFairPrice((arr.reduce((prev, current) => prev + current, 0) + arr[arr.length - 1] * (currentCashFlowGrowth - expectedReturn)) / shareOutstanding);
+    let terminatedCashFlow = currentCashFlowGrowth > expectedReturn ? arr[arr.length - 1] * (currentCashFlowGrowth - expectedReturn) : 0;
+    setCalculatedFairPrice((arr.reduce((prev, current) => prev + current, 0) + terminatedCashFlow) / shareOutstanding);
   }, [currentCashFlow, currentCashFlowGrowth, expectedReturn]);
 
   if (!get(tickerInfo, "finviz_info")) {
