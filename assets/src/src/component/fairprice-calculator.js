@@ -3,6 +3,7 @@ import {useState} from "react";
 import {find, get} from "lodash";
 import {DiscountedCashflowFairpriceCalculator} from "./discounted-cashflow-fairprice-calculator";
 import {Rule1InvestingFairpriceCalculator} from "./rule-1-investing-fairprice-calculator";
+import {DiscountedDividendFairpriceCalculator} from "./discounted-dividend-fairprice-calculator";
 
 export const FairpriceCalculator = ({tickerInfo}) => {
   const [value, setValue] = useState('dcf');
@@ -10,6 +11,7 @@ export const FairpriceCalculator = ({tickerInfo}) => {
   const options = [
     {title: 'Discounted Cash Flow', key: 'dcf'},
     {title: 'Rule #1 investing', key: 'rule1'},
+    {title: 'Discounted Dividend', key: 'ddm'},
   ];
 
   return (
@@ -35,6 +37,9 @@ export const FairpriceCalculator = ({tickerInfo}) => {
       }
       {
         value === 'rule1' && <Rule1InvestingFairpriceCalculator tickerInfo={tickerInfo}/>
+      }
+      {
+        value === 'ddm' && <DiscountedDividendFairpriceCalculator tickerInfo={tickerInfo}/>
       }
     </>
   )

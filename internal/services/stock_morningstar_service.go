@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tidwall/pretty"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/gocolly/colly"
@@ -56,6 +58,15 @@ type morningStarFairPriceDTO struct {
 			} `json:"recent"`
 		} `json:"chartDatums"`
 	} `json:"chart"`
+}
+
+type morningStarDividendDataDTO struct {
+	Columns []string `json:"columnDefs_labels"`
+	Rows    []struct {
+		Label    string                          `json:"label"`
+		Datum    []string                        `json:"datum"`
+		SubLevel morningStarFinancialDataRowsDTO `json:"subLevel"`
+	} `json:"rows"`
 }
 
 type morningStarFinancialDataRowDTO struct {
@@ -140,6 +151,11 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		return nil, err
 	}
 
+	dividendData, err := getMorningStarDividendData(stockMSID, headerData)
+	if err != nil {
+		return nil, err
+	}
+
 	var rois []entities.YearAmount
 	for _, row := range performanceDTO.Reported.Collapsed.Rows {
 		for idx, col := range performanceDTO.Reported.Columns {
@@ -211,6 +227,7 @@ func GetDataFromMorningstar(ticker string) (*entities.MorningStarPerformanceDTO,
 		Url:             url,
 		FinancialData:   *financialData,
 		ValuationData:   *valuationDTO,
+		DividendData:    dividendData,
 	}
 
 	return &response, nil
@@ -389,53 +406,98 @@ func getMorningStarFinancialData(stockMSID string, headerData map[string]string)
 		return nil, err
 	}
 
-	populateAmount := func(stm morningStarFinancialDataDTO, find []string, amountList *entities.ListYearAmount, growthList *entities.ListYearAmount, parseByOrderOfMagnitude bool) error {
-		amounts, ok := stm.Rows.find(find)
-		if ok {
-			for idx, amount := range amounts.Datum {
-				year, err := entities.NewYear(stm.Columns[idx])
-				if err != nil {
-					return err
-				}
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths, true, true); err != nil {
+		return nil, err
+	}
 
-				if amount != nil {
-					money := entities.Money(*amount)
-					if parseByOrderOfMagnitude {
-						money = stm.getMoney(*amount)
-					}
-					*amountList = append(*amountList, entities.NewYearAmount(year, &money))
-				} else {
-					*amountList = append(*amountList, entities.NewYearAmount(year, entities.NewMoney(math.NaN())))
-				}
-			}
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit"}, &res.GrossProfits, &res.GrossProfitGrowths, true, true); err != nil {
+		return nil, err
+	}
 
-			*growthList = calculateGrowth(*amountList, []int{10, 5, 2})
+	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Total Operating Profit/Loss"}, &res.NetProfits, &res.NetProfitGrowths, true, true); err != nil {
+		return nil, err
+	}
+
+	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths, true, false); err != nil {
+		return nil, err
+	}
+
+	if err := populateAmount(balanceSheetStmResp, []string{"BalanceSheet", "Total Equity"}, &res.Equities, &res.EquityGrowths, true, true); err != nil {
+		return nil, err
+	}
+
+	if err := populateAmount(cashFlowStmResp, []string{"CashFlow", "Cash and Cash Equivalents, End of Period"}, &res.CashFlows, &res.CashFlowGrowths, true, true); err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+func getMorningStarDividendData(stockMSID string, headerData map[string]string) (*entities.MorningStarDividendData, error) {
+	c := colly.NewCollector()
+	apiURL := fmt.Sprintf("https://api-global.morningstar.com/sal-service/v1/stock/dividends/v4/%s/data?clientId=MDC&benchmarkId=category&version=3.41.0", stockMSID)
+
+	var responseDTO morningStarDividendDataDTO
+
+	c.OnRequest(func(request *colly.Request) {
+		for k, v := range headerData {
+			request.Headers.Add(k, v)
+		}
+	})
+	c.OnResponse(func(response *colly.Response) {
+		err := json.Unmarshal(response.Body, &responseDTO)
+		if err != nil {
+			logrus.Warnf("Error while decoding Morningstar response: %s", err.Error())
 		}
 
-		return nil
-	}
+		ioutil.WriteFile("dividends.tmp.json", pretty.PrettyOptions(response.Body, &pretty.Options{
+			Width:  180,
+			Prefix: "",
+			Indent: "  ",
+		}), 0600)
+	})
 
-	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit", "Total Revenue"}, &res.Revenues, &res.RevenueGrowths, true); err != nil {
+	err := c.Visit(apiURL)
+	if err != nil {
 		return nil, err
 	}
 
-	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Gross Profit"}, &res.GrossProfits, &res.GrossProfitGrowths, true); err != nil {
-		return nil, err
+	var newRows morningStarFinancialDataRowsDTO
+	for _, row := range responseDTO.Rows {
+		var parsedDatum []*float64
+		for _, d := range row.Datum {
+			if d == "" {
+				parsedDatum = append(parsedDatum, nil)
+			} else {
+				parsedAmount, err := strconv.ParseFloat(d, 64)
+				if err != nil {
+					return nil, err
+				}
+
+				parsedDatum = append(parsedDatum, &parsedAmount)
+			}
+		}
+
+		newRows = append(newRows, &morningStarFinancialDataRowDTO{
+			Label: row.Label,
+			Datum: parsedDatum,
+		})
 	}
 
-	if err := populateAmount(incomeStmResp, []string{"IncomeStatement", "Total Operating Profit/Loss"}, &res.NetProfits, &res.NetProfitGrowths, true); err != nil {
-		return nil, err
+	financialDTO := morningStarFinancialDataDTO{
+		Columns: responseDTO.Columns[1:],
+		Rows:    newRows,
 	}
 
-	if err := populateAmount(incomeStmResp, []string{"WasoAndEpsData", "Diluted EPS"}, &res.EPS, &res.EPSGrowths, false); err != nil {
+	var res entities.MorningStarDividendData
+
+	if err := populateAmount(financialDTO, []string{"Dividend Per Share"}, &res.DividendPerShares, &res.DividendPerShareGrowths, true, false); err != nil {
 		return nil, err
 	}
-
-	if err := populateAmount(balanceSheetStmResp, []string{"BalanceSheet", "Total Equity"}, &res.Equities, &res.EquityGrowths, true); err != nil {
+	if err := populateAmount(financialDTO, []string{"Trailing Dividend Yield %"}, &res.TotalYields, nil, true, false); err != nil {
 		return nil, err
 	}
-
-	if err := populateAmount(cashFlowStmResp, []string{"CashFlow", "Cash and Cash Equivalents, End of Period"}, &res.CashFlows, &res.CashFlowGrowths, true); err != nil {
+	if err := populateAmount(financialDTO, []string{"Total Yield %"}, &res.TotalYields, nil, true, false); err != nil {
 		return nil, err
 	}
 
@@ -467,6 +529,52 @@ func calculateGrowth(input []entities.YearAmount, periods []int) []entities.Year
 	}
 
 	return res
+}
+
+func populateAmount(stm morningStarFinancialDataDTO, find []string, amountList *entities.ListYearAmount, growthList *entities.ListYearAmount, asMoney bool, parseByOrderOfMagnitude bool) error {
+	amounts, ok := stm.Rows.find(find)
+	if ok {
+		for idx, amount := range amounts.Datum {
+			yearStr := stm.Columns[idx]
+			if yearStr == "dividends.headers.current" || yearStr == "dividends.headers.fiveyear" {
+				continue
+			}
+			if yearStr == "dividends.headers.oneyearttm" {
+				yearStr = "ttm"
+			}
+			year, err := entities.NewYear(yearStr)
+			if err != nil {
+				return err
+			}
+
+			if amount != nil {
+				var value entities.Amount
+
+				if asMoney {
+					value = entities.NewMoney(*amount)
+					if parseByOrderOfMagnitude {
+						_value := stm.getMoney(*amount)
+						value = &_value
+					}
+				} else {
+					value = entities.NewPercentage(*amount)
+				}
+				*amountList = append(*amountList, entities.NewYearAmount(year, value))
+			} else {
+				if asMoney {
+					*amountList = append(*amountList, entities.NewYearAmount(year, entities.NewMoney(math.NaN())))
+				} else {
+					*amountList = append(*amountList, entities.NewYearAmount(year, entities.NewPercentage(math.NaN())))
+				}
+			}
+		}
+
+		if growthList != nil {
+			*growthList = calculateGrowth(*amountList, []int{10, 5, 2})
+		}
+	}
+
+	return nil
 }
 
 func calculateAverage(input []entities.YearAmount) []entities.YearAmount {

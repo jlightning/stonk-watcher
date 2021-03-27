@@ -73,6 +73,13 @@ type MorningStarValuationData struct {
 	PriceOnBooks    ListYearAmount `json:"price_on_books"`
 }
 
+type MorningStarDividendData struct {
+	DividendPerShares       ListYearAmount `json:"dividend_per_shares"`
+	DividendPerShareGrowths ListYearAmount `json:"dividend_per_share_growths"`
+	TrailingYields          ListYearAmount `json:"trailing_yields"`
+	TotalYields             ListYearAmount `json:"total_yields"`
+}
+
 type MorningStarPerformanceDTO struct {
 	ROIs            ListYearAmount           `json:"rois"`
 	ROIGrowths      ListYearAmount           `json:"roi_growths"`
@@ -80,4 +87,5 @@ type MorningStarPerformanceDTO struct {
 	Url             string                   `json:"url"`
 	FinancialData   MorningStarFinancialData `json:"financial_data"`
 	ValuationData   MorningStarValuationData `json:"valuation_data"`
+	DividendData    *MorningStarDividendData `json:"dividend_data"`
 }

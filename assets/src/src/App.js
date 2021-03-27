@@ -244,6 +244,7 @@ function App() {
                     let cashFlowGrowths = [];
                     let grossIncomeMargins = [];
                     let netIncomeMargins = [];
+                    let dividends = [];
                     const detail = get(details, `['${t}']`)
                     if (detail) {
                       grossIncomeMargins = get(detail, 'morningstar_info.financial_data.gross_profit_margins') || get(detail, 'marketwatch_info.gross_income_margin') || [];
@@ -258,6 +259,7 @@ function App() {
                       equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || get(detail, 'marketwatch_info.equity_growths') || [];
                       cashFlows = get(detail, 'morningstar_info.financial_data.cash_flows') || get(detail, 'marketwatch_info.free_cash_flow') || [];
                       cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || get(detail, 'marketwatch_info.free_cash_flow_growths') || [];
+                      dividends = get(detail, 'morningstar_info.dividend_data.dividend_per_shares') || [];
                     }
                     let price = get(prices, `['${t}'].price`);
                     price = price || get(details, `['${t}'].finviz_info.price`, '-');
@@ -396,7 +398,16 @@ function App() {
                             </OverlayTrigger>
                           </td>
                           <td>
-                            {get(detail, `finviz_info.dividend_yield.percent`, '-')}
+                            {dividends && dividends.length ? (
+                              <OverlayTrigger delay={{show: 50, hide: 150}} placement={'left'}
+                                              overlay={props => renderTooltip(t, props, dividends, 'Dividends')}>
+                                <Container className={'can-hover'}>
+                                  <Row>
+                                    <Col>{get(detail, `finviz_info.dividend_yield.percent`, '-')}</Col>
+                                  </Row>
+                                </Container>
+                              </OverlayTrigger>
+                            ) : get(detail, `finviz_info.dividend_yield.percent`, '-')}
                           </td>
                           <td>
                             {get(detail, `finviz_info.epsttm`, '-')}
