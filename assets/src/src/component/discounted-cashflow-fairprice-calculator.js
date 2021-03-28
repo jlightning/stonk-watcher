@@ -13,7 +13,7 @@ export const DiscountedCashflowFairpriceCalculator = ({tickerInfo}) => {
   const [shareOutstanding, setShareOutstanding] = useState(0);
 
   useEffect(() => {
-    setCashFlows(get(tickerInfo, 'morningstar_info.financial_data.cash_flows') || get(tickerInfo, 'marketwatch_info.free_cash_flow') || []);
+    setCashFlows(get(tickerInfo, 'marketwatch_info.free_cash_flow') || []);
     setShareOutstanding(get(tickerInfo, 'finviz_info.share_outstanding', 0));
     setExpectedReturn(get(tickerInfo, 'marketwatch_info.wacc.amount', 0) * 100);
   }, [tickerInfo]);

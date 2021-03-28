@@ -258,8 +258,8 @@ function App() {
                       epsGrowths = get(detail, 'morningstar_info.financial_data.eps_growths') || get(detail, 'marketwatch_info.eps_growths') || [];
                       equities = get(detail, 'morningstar_info.financial_data.equities') || get(detail, 'marketwatch_info.equities') || [];
                       equityGrowths = get(detail, 'morningstar_info.financial_data.equity_growths') || get(detail, 'marketwatch_info.equity_growths') || [];
-                      cashFlows = get(detail, 'morningstar_info.financial_data.cash_flows') || get(detail, 'marketwatch_info.free_cash_flow') || [];
-                      cashFlowGrowths = get(detail, 'morningstar_info.financial_data.cash_flow_growths') || get(detail, 'marketwatch_info.free_cash_flow_growths') || [];
+                      cashFlows = get(detail, 'marketwatch_info.free_cash_flow') || [];
+                      cashFlowGrowths = get(detail, 'marketwatch_info.free_cash_flow_growths') || [];
                       dividends = get(detail, 'morningstar_info.dividend_data.dividend_per_shares') || [];
                     }
                     let price = get(prices, `['${t}'].price`);
