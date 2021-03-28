@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/gocolly/colly"
 )
 
@@ -23,6 +25,11 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 
 	stockInfo := entities.MarketWatchInfoDTO{
 		Url: financialUrl,
+	}
+
+	beta, marketCap, err := getMarketWatchOverviewData(ticker)
+	if err != nil {
+		return nil, err
 	}
 
 	incomeStmData, years, err := getMarketwatchTableData(financialUrl)
@@ -53,10 +60,14 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 		{dest: &stockInfo.GrossIncome, title: "Gross Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.PretaxIncome, title: "Pretax Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.NetIncome, title: "Net Income", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.IncomeTax, title: "Income Tax", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.InterestExpense, title: "Interest Expense", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.EPS, growthDest: &stockInfo.EPSGrowths, title: "EPS (Diluted)", source: incomeStmData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.TotalAssets, title: "Total Assets", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.ShortTermDebt, title: "Short Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.CurrentPortionOfLongTermDebt, title: "Current Portion of Long Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.LongTermDebt, title: "Long-Term Debt", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
+		{dest: &stockInfo.TotalCurrentLiabilities, title: "Total Current Liabilities", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.TotalLiabilities, title: "Total Liabilities", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.Equities, growthDest: &stockInfo.EquityGrowths, title: "Total Shareholders' Equity", source: balanceSheetData, parser: util.ParseMultipleFloat(util.ParseMoney)},
 		{dest: &stockInfo.FreeCashFlow, growthDest: &stockInfo.FreeCashFlowGrowths, title: "Free Cash Flow", source: cashFlowData, parser: util.ParseMultipleFloat(util.ParseMoney)},
@@ -85,9 +96,75 @@ func getFinancialDataFromMarketWatch(ticker string) (*entities.MarketWatchInfoDT
 	stockInfo.GrossIncomeMargin = calculateMargin(stockInfo.Sales, stockInfo.GrossIncome)
 	stockInfo.NetIncomeMargins = calculateMargin(stockInfo.Sales, stockInfo.NetIncome)
 
-	sort.Sort(stockInfo.GrossIncomeMargin)
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				logrus.Error("error while calculating WACC", r)
+			}
+		}()
+		interestExpenseOnLiabilities := calculateMargin(stockInfo.LongTermDebt.Add(stockInfo.CurrentPortionOfLongTermDebt), stockInfo.InterestExpense)
+
+		taxRate := calculateMargin(stockInfo.PretaxIncome, stockInfo.IncomeTax)
+
+		costOfDebts := interestExpenseOnLiabilities.Multiply(taxRate.FlipSign().AddToAll(1))
+
+		const riskFreeRate = 0.02
+		const expectedReturnOfMarket = 0.1
+
+		costOfEquity := riskFreeRate + beta*(expectedReturnOfMarket-riskFreeRate)
+
+		debtWeight := stockInfo.TotalCurrentLiabilities.Last().Amount.Get() / marketCap
+
+		equityWeight := 1 - debtWeight
+
+		wacc := debtWeight*costOfDebts.Last().Amount.Get() + equityWeight*costOfEquity
+		stockInfo.WACC = entities.NewPercentage(wacc)
+	}()
 
 	return &stockInfo, nil
+}
+
+func getMarketWatchOverviewData(ticker string) (beta, marketCap float64, err error) {
+	overviewUrl := fmt.Sprintf("https://www.marketwatch.com/investing/stock/%s", strings.ToLower(ticker))
+
+	c := colly.NewCollector()
+
+	c.OnHTML("li", func(e *colly.HTMLElement) {
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(e.Text)), "beta") {
+			arr := strings.Split(e.Text, "\n")
+			var newArr []string
+			for _, item := range arr {
+				item = strings.Trim(item, " \n")
+				if len(item) > 0 {
+					newArr = append(newArr, item)
+				}
+			}
+			if len(newArr) == 2 {
+				beta, _ = strconv.ParseFloat(newArr[1], 64)
+			}
+		}
+
+		if strings.HasPrefix(strings.ToLower(strings.TrimSpace(e.Text)), "market cap") {
+			arr := strings.Split(e.Text, "\n")
+			var newArr []string
+			for _, item := range arr {
+				item = strings.Trim(item, " \n")
+				if len(item) > 0 {
+					newArr = append(newArr, item)
+				}
+			}
+			if len(newArr) == 2 {
+				marketCap, _ = util.ParseMoney(newArr[1])
+			}
+		}
+	})
+
+	err = c.Visit(overviewUrl)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return beta, marketCap, nil
 }
 
 func getMarketwatchTableData(url string) (map[string][]string, []int, error) {

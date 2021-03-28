@@ -30,25 +30,30 @@ type FinvizStockInfoDTO struct {
 }
 
 type MarketWatchInfoDTO struct {
-	Years               []int          `json:"years"`
-	Sales               ListYearAmount `json:"sales"`
-	SalesGrowth         ListYearAmount `json:"sales_growth"`
-	GrossIncome         ListYearAmount `json:"gross_income"`
-	GrossIncomeMargin   ListYearAmount `json:"gross_income_margin"`
-	PretaxIncome        ListYearAmount `json:"pretax_income"`
-	NetIncome           ListYearAmount `json:"net_income"`
-	NetIncomeMargins    ListYearAmount `json:"net_income_margins"`
-	EPS                 ListYearAmount `json:"eps"`
-	EPSGrowths          ListYearAmount `json:"eps_growths"`
-	TotalAssets         ListYearAmount `json:"total_assets"`
-	ShortTermDebt       ListYearAmount `json:"short_term_debt"`
-	LongTermDebt        ListYearAmount `json:"long_term_debt"`
-	TotalLiabilities    ListYearAmount `json:"total_liabilities"`
-	Equities            ListYearAmount `json:"equities"`
-	EquityGrowths       ListYearAmount `json:"equity_growths"`
-	FreeCashFlow        ListYearAmount `json:"free_cash_flow"`
-	FreeCashFlowGrowths ListYearAmount `json:"free_cash_flow_growths"`
-	Url                 string         `json:"url"`
+	Years                        []int          `json:"years"`
+	Sales                        ListYearAmount `json:"sales"`
+	SalesGrowth                  ListYearAmount `json:"sales_growth"`
+	GrossIncome                  ListYearAmount `json:"gross_income"`
+	GrossIncomeMargin            ListYearAmount `json:"gross_income_margin"`
+	PretaxIncome                 ListYearAmount `json:"pretax_income"`
+	IncomeTax                    ListYearAmount `json:"income_tax"`
+	NetIncome                    ListYearAmount `json:"net_income"`
+	InterestExpense              ListYearAmount `json:"interest_expense"`
+	NetIncomeMargins             ListYearAmount `json:"net_income_margins"`
+	EPS                          ListYearAmount `json:"eps"`
+	EPSGrowths                   ListYearAmount `json:"eps_growths"`
+	TotalAssets                  ListYearAmount `json:"total_assets"`
+	ShortTermDebt                ListYearAmount `json:"short_term_debt"`
+	CurrentPortionOfLongTermDebt ListYearAmount `json:"current_portion_of_long_term_debt"`
+	LongTermDebt                 ListYearAmount `json:"long_term_debt"`
+	TotalCurrentLiabilities      ListYearAmount `json:"total_current_liabilities"`
+	TotalLiabilities             ListYearAmount `json:"total_liabilities"`
+	Equities                     ListYearAmount `json:"equities"`
+	EquityGrowths                ListYearAmount `json:"equity_growths"`
+	FreeCashFlow                 ListYearAmount `json:"free_cash_flow"`
+	FreeCashFlowGrowths          ListYearAmount `json:"free_cash_flow_growths"`
+	Url                          string         `json:"url"`
+	WACC                         *Percentage    `json:"wacc"`
 }
 
 type MorningStarFinancialData struct {

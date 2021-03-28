@@ -42,6 +42,18 @@ func (m Money) IsNaN() bool {
 	return math.IsNaN(float64(m))
 }
 
+func (m *Money) Add(b Amount) Amount {
+	return NewMoney(float64(*m) + b.Get())
+}
+
+func (m *Money) Multiply(b Amount) Amount {
+	return NewMoney(float64(*m) * b.Get())
+}
+
+func (m *Money) FlipSign() Amount {
+	return NewPercentage(-float64(*m))
+}
+
 func (m Money) MarshalJSON() ([]byte, error) {
 	if m.IsNaN() {
 		return []byte("null"), nil
@@ -83,6 +95,18 @@ func (p Percentage) Get() float64 {
 
 func (p Percentage) IsNaN() bool {
 	return math.IsNaN(float64(p))
+}
+
+func (p *Percentage) Add(b Amount) Amount {
+	return NewPercentage(float64(*p) + b.Get())
+}
+
+func (p *Percentage) Multiply(b Amount) Amount {
+	return NewPercentage(float64(*p) * b.Get())
+}
+
+func (p *Percentage) FlipSign() Amount {
+	return NewPercentage(-float64(*p))
 }
 
 func (m *Percentage) UnmarshalJSON(bytes []byte) error {

@@ -17,6 +17,8 @@ export const DiscountedDividendFairpriceCalculator = ({tickerInfo}) => {
     if (dividends.length > 0) {
       setCurrentDPS(dividends[dividends.length - 1].amount);
     }
+
+    setExpectedReturn(get(tickerInfo, 'marketwatch_info.wacc.amount', 0) * 100);
   }, [tickerInfo]);
 
   useEffect(() => {

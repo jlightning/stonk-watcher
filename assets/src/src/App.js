@@ -173,6 +173,7 @@ function App() {
                   <th><Container><Row className={'row-th'}>Company Name</Row></Container></th>
                   <th><Container><Row className={'row-th'}>RSI</Row></Container></th>
                   <th><Container><Row className={'row-th'}>Shorted</Row></Container></th>
+                  <th><Container><Row className={'row-th'}>WACC</Row></Container></th>
                   <th>
                     <Container>
                       <Row className={'row-th'}>Debt /</Row>
@@ -228,7 +229,7 @@ function App() {
                 <tbody>
                 <tr>
                   <td colSpan={4}>{splatTicker.sector}</td>
-                  <td colSpan={15}>-</td>
+                  <td colSpan={16}>-</td>
                 </tr>
                 {
                   splatTicker.tickers.map((t, tIdx) => {
@@ -275,15 +276,18 @@ function App() {
                           <td>{shortenString(get(detail, `finviz_info.company_name`, '-'), 12)}</td>
                           <td>
                             <ColorBox
-                              dangerLevel={getRSIDangerLevel(get(detail, `finviz_info.rsi.amount`))}>{get(details, `['${t}'].finviz_info.rsi.amount`, '-')}</ColorBox>
+                              dangerLevel={getRSIDangerLevel(get(detail, `finviz_info.rsi.amount`))}>{get(detail, `finviz_info.rsi.amount`, '-')}</ColorBox>
                           </td>
                           <td>
                             <ColorBox
-                              dangerLevel={getShortFloatDangerLevel(get(detail, `finviz_info.short_float.amount`))}>{get(details, `['${t}'].finviz_info.short_float.percent`, '-')}</ColorBox>
+                              dangerLevel={getShortFloatDangerLevel(get(detail, `finviz_info.short_float.amount`))}>{get(detail, `finviz_info.short_float.percent`, '-')}</ColorBox>
+                          </td>
+                          <td>
+                            {get(detail, `marketwatch_info.wacc.percent`, '-')}
                           </td>
                           <td>
                             <ColorBox
-                              dangerLevel={getDebtEquityDangerLevel(get(detail, `finviz_info.debt_on_equity.amount`))}>{get(details, `['${t}'].finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
+                              dangerLevel={getDebtEquityDangerLevel(get(detail, `finviz_info.debt_on_equity.amount`))}>{get(detail, `finviz_info.debt_on_equity.amount`, '-')}</ColorBox>
                           </td>
                           <td>
                             {!get(detail, 'morningstar_info.valuation_data.price_on_books') ? get(detail, `finviz_info.pb.amount`, '-') : (
@@ -448,7 +452,7 @@ function App() {
                           <td colSpan={2}>URL</td>
                           <td colSpan={4}><a href={get(details, `['${t}'].finviz_info.url`)}
                                              target='_blank'>{get(details, `['${t}'].finviz_info.url`)}</a></td>
-                          <td colSpan={3}><a href={get(details, `['${t}'].marketwatch_info.url`)}
+                          <td colSpan={4}><a href={get(details, `['${t}'].marketwatch_info.url`)}
                                              target='_blank'>{get(details, `['${t}'].marketwatch_info.url`)}</a></td>
                           <td colSpan={4}><a href={get(details, `['${t}'].morningstar_info.url`)}
                                              target='_blank'>{get(details, `['${t}'].morningstar_info.url`)}</a></td>

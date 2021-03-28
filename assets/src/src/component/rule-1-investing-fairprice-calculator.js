@@ -18,6 +18,8 @@ export const Rule1InvestingFairpriceCalculator = ({tickerInfo}) => {
     if (eps.length > 0) {
       setCurrentEPS(eps[eps.length - 1].amount);
     }
+
+    setExpectedReturn(get(tickerInfo, 'marketwatch_info.wacc.amount', 0) * 100);
   }, [tickerInfo]);
 
   useEffect(() => {

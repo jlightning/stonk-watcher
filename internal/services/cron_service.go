@@ -11,11 +11,11 @@ type CronLogger struct {
 }
 
 func (c *CronLogger) Info(msg string, keysAndValues ...interface{}) {
-	logrus.Infof(msg, keysAndValues)
+	logrus.Infof(msg, keysAndValues...)
 }
 
 func (c *CronLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	logrus.WithError(err).Errorf(msg, keysAndValues)
+	logrus.WithError(err).Errorf(msg, keysAndValues...)
 }
 
 func init() {

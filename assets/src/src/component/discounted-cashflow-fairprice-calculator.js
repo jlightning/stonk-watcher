@@ -15,6 +15,7 @@ export const DiscountedCashflowFairpriceCalculator = ({tickerInfo}) => {
   useEffect(() => {
     setCashFlows(get(tickerInfo, 'morningstar_info.financial_data.cash_flows') || get(tickerInfo, 'marketwatch_info.free_cash_flow') || []);
     setShareOutstanding(get(tickerInfo, 'finviz_info.share_outstanding', 0));
+    setExpectedReturn(get(tickerInfo, 'marketwatch_info.wacc.amount', 0) * 100);
   }, [tickerInfo]);
 
   useEffect(() => {
@@ -26,12 +27,20 @@ export const DiscountedCashflowFairpriceCalculator = ({tickerInfo}) => {
   useEffect(() => {
     let arr = [];
     for (let i = 1; i <= 10; i++) {
-      arr.push(currentCashFlow * Math.pow((1 + currentCashFlowGrowth / 100), i));
+      arr.push(currentCashFlow * Math.pow(1 + currentCashFlowGrowth / 100, i));
     }
 
-    arr = arr.map(cf => cf - cf * expectedReturn / 100);
-    let terminatedCashFlow = currentCashFlowGrowth > expectedReturn ? arr[arr.length - 1] * (currentCashFlowGrowth - expectedReturn) : 0;
-    setCalculatedFairPrice((arr.reduce((prev, current) => prev + current, 0) + terminatedCashFlow) / shareOutstanding);
+    const perpetualGrowth = 0.025;
+    const terminatedCashFlow = arr[arr.length - 1] * (1 + perpetualGrowth) / (expectedReturn/100 - perpetualGrowth);
+    arr.push(terminatedCashFlow);
+
+    const discountFactor = expectedReturn/100 + 1;
+
+    arr = arr.map((cf, idx) => {
+      return cf / Math.pow(discountFactor, idx === arr.length - 1 ? idx : idx + 1);
+    })
+
+    setCalculatedFairPrice((arr.reduce((prev, current) => prev + current, 0)) / shareOutstanding);
   }, [currentCashFlow, currentCashFlowGrowth, expectedReturn]);
 
   if (!get(tickerInfo, "finviz_info")) {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math"
 	"regexp"
+	"sort"
 	"stonk-watcher/internal/entities"
 	"stonk-watcher/internal/util"
 	"strconv"
@@ -637,6 +638,8 @@ func calculateMargin(marginOfs entities.ListYearAmount, amounts entities.ListYea
 			res = append(res, ym)
 		}
 	}
+
+	sort.Sort(res)
 
 	return
 }

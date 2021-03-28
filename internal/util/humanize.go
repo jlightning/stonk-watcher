@@ -35,6 +35,9 @@ func ParseMoney(str string) (float64, error) {
 	if str == "-" {
 		return math.NaN(), nil
 	}
+	if strings.HasPrefix(str, "$") {
+		str = str[1:]
+	}
 
 	orgStr := str
 
@@ -62,6 +65,8 @@ func ParseMoney(str string) (float64, error) {
 		res *= 1000000000
 	case "M":
 		res *= 1000000
+	case "K":
+		res *= 1000
 	case "":
 	default:
 		return 0, errors.New(fmt.Sprintf("invalid amount: %s", orgStr))

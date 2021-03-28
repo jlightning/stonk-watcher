@@ -1,7 +1,6 @@
 package entities
 
 import (
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -38,59 +37,6 @@ func (y *Year) PeriodFrom(orig Year) Year {
 	return Year{Year: y.Year - orig.Year, IsPeriod: true}
 }
 
-type Amount interface {
-	FloatSetter
-	FloatGetter
-	IsNaN() bool
-	UnmarshalJSON(b []byte) error
-}
-
-type YearAmount struct {
-	Year   Year   `json:"year"`
-	Amount Amount `json:"amount"`
-}
-
-type yearAmountAlias YearAmount
-
-func (ymo *YearAmount) UnmarshalJSON(bytes []byte) error {
-	var ym yearAmountAlias
-
-	money := Money(0)
-	percentage := Percentage(0)
-	ym.Amount = &money
-
-	err := json.Unmarshal(bytes, &ym)
-	if err == nil {
-		goto end
-	}
-
-	ym.Amount = &percentage
-	err = json.Unmarshal(bytes, &ym)
-	if err != nil {
-		return err
-	}
-
-end:
-	ymo.Amount = ym.Amount
-	ymo.Year = ym.Year
-
-	return nil
-}
-
-func NewYearAmount(year Year, amount Amount) YearAmount {
-	return YearAmount{Year: year, Amount: amount}
-}
-
-type ListYearAmount []YearAmount
-
-func (x ListYearAmount) Len() int {
-	return len(x)
-}
-
-func (x ListYearAmount) Less(i, j int) bool {
-	return x[i].Year.Year < x[j].Year.Year
-}
-
-func (x ListYearAmount) Swap(i, j int) {
-	x[i], x[j] = x[j], x[i]
+func (y Year) Equal(b Year) bool {
+	return y.Year == b.Year && y.IsTTM == b.IsTTM && y.IsPeriod == b.IsPeriod
 }
